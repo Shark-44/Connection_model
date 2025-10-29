@@ -1,0 +1,308 @@
+{
+    "fr": {
+      "api": {
+        "common": {
+          "network_error": "Problème de connexion au serveur",
+          "server_error": "Une erreur serveur est survenue",
+          "not_found": "Ressource non trouvée",
+          "default_error": "Une erreur est survenue"
+        },
+        "fetch": {
+          "types": {
+            "network_error": "Impossible de récupérer les types : problème de connexion",
+            "not_found": "Les types demandés sont introuvables",
+            "server_error": "Erreur serveur lors de la récupération des types",
+            "default_error": "Erreur lors de la récupération des types"
+          },
+          "orders": {
+            "network_error": "Impossible de récupérer les commandes : problème de connexion",
+            "not_found": "Les commandes demandées sont introuvables",
+            "server_error": "Erreur serveur lors de la récupération des commandes",
+            "default_error": "Erreur lors de la récupération des commandes"
+          },
+          "finlorders": {
+            "network_error": "Impossible de récupérer la commande finale: problème de connexion",
+            "not_found": "La commande finale demandée est introuvable",
+            "server_error": "Erreur serveur lors de la récupération de la commande finale",
+            "default_error": "Erreur lors de la récupération de commande finale"
+  
+          },
+          "products": {
+            "network_error": "Impossible de récupérer les produits : problème de connexion",
+            "not_found": "Les produits demandés sont introuvables",
+            "server_error": "Erreur serveur lors de la récupération des produits",
+            "default_error": "Erreur lors de la récupération des produits"
+          },
+          "productsprice": {
+            "network_error": "Impossible de récupérer les produits avec leur prix : problème de connexion",
+            "not_found": "Les produits  avec leur prix demandés sont introuvables",
+            "server_error": "Erreur serveur lors de la récupération des produits avec leur prix",
+            "default_error": "Erreur lors de la récupération des produits avec leur prix"
+          },
+          "productsbytype": {
+            "network_error": "Impossible de récupérer les produits par type: problème de connexion",
+            "not_found": "Les produits par type demandés sont introuvables",
+            "server_error": "Erreur serveur lors de la récupération des produits par type",
+            "default_error": "Erreur lors de la récupération des produits par type"
+          },
+          "productsbyid": {
+            "network_error": "Impossible de récupérer le produit : problème de connexion",
+            "not_found": "Le produit demandé est introuvable",
+            "server_error": "Erreur serveur lors de la récupération du produit",
+            "default_error": "Erreur lors de la récupération du produit"
+          }
+        },
+        "finish": {
+          "orders": {
+            "network_error": "Impossible de cloturer la commande : problème de connexion",
+            "not_found": "Probleme a l/identification de la commande pour cloturer",
+            "server_error": "Erreur serveur lors de la cloture commande",
+            "default_error": "Erreur a cloturer une commande"
+          }
+        },
+        "delete": {
+          "orders": {
+            "network_error": "Impossible a la suppression d'un produit : problème de connexion",
+            "not_found": "Probleme a l'identification d'un produit pour le supprimer",
+            "server_error": "Erreur serveur lors de la suppression d'un produit",
+            "default_error": "Erreur a la suppression d'un produit dans une commande"        
+          }
+        },
+        "create": {
+          "orders": {
+            "default_error": "Erreur a la creation d'une commande"
+          } 
+        },
+        "deleteItem": {
+          "basket": {
+            "network_error": "Impossible a la suppression d'un produit dans le panier: problème de connexion",
+            "not_found": "Probleme a l'identification d'un produit dans le panier pour le supprimer",
+            "server_error": "Erreur serveur lors de la suppression d'un produit dans le panier ",
+            "default_error": "Erreur a la suppression d'un produit dans le panier"
+          }
+        },
+        "updateQuantity": {
+          "basket": {
+            "network_error": "Impossible de modifier la quantité d'un produit dans le panier: problème de connexion",
+            "not_found": "Probleme a l'identification d'un produit dans le panier pour le supprimer",
+            "server_error": "Erreur serveur lors de la modification de la quantité d'un produit dans le panier ",
+            "default_error": "Erreur a la modification de la quantité d'un produit dans le panier"
+          }
+        },
+        "addItem": {
+          "basket": {
+            "network_error": "Impossible lors de l'ajout d'un produit dans le panier: problème de connexion",
+            "not_found": "Probleme a l'identification lors de l'ajout d'un produit dans le panier pour le supprimer",
+            "server_error": "Erreur serveur lors de l'ajout d'un produit dans le panier ",
+            "default_error": "Erreur lors de l'ajout d'un produit dans le panier"
+          }
+        }
+      }
+    },
+    "gb": {
+      "api": {
+        "common": {
+          "network_error": "Server connection issue",
+          "server_error": "A server error occurred",
+          "not_found": "Resource not found",
+          "default_error": "An error occurred"
+        },
+        "fetch": {
+          "types": {
+            "network_error": "Unable to fetch types: connection issue",
+            "not_found": "Requested types not found",
+            "server_error": "Server error while fetching types",
+            "default_error": "Error fetching types"
+          },
+          "orders": {
+            "network_error": "Unable to fetch orders: connection issue",
+            "not_found": "Requested orders not found",
+            "server_error": "Server error while fetching orders",
+            "default_error": "Error fetching orders"
+          },
+          "finlorders": {
+            "network_error": "Unable to fetch final order: connection issue",
+            "not_found": "Requested final order not found",
+            "server_error": "Server error while fetching final order",
+            "default_error": "Error fetching final order"
+          },
+          "products": {
+            "network_error": "Unable to fetch products: connection issue",
+            "not_found": "Requested products not found",
+            "server_error": "Server error while fetching products",
+            "default_error": "Error fetching products"
+          },
+          "productsprice": {
+            "network_error": "Unable to fetch products with prices: connection issue",
+            "not_found": "Requested products with prices not found",
+            "server_error": "Server error while fetching products with prices",
+            "default_error": "Error fetching products with prices"
+          },
+          "productsbytype": {
+            "network_error": "Unable to fetch products by type: connection issue",
+            "not_found": "Requested products by type not found",
+            "server_error": "Server error while fetching products by type",
+            "default_error": "Error fetching products by type"
+          },
+          "productsbyid": {
+            "network_error": "Unable to fetch product: connection issue",
+            "not_found": "Requested product not found",
+            "server_error": "Server error while fetching product",
+            "default_error": "Error fetching product"
+          }
+        },
+        "finish": {
+          "orders": {
+            "network_error": "Unable to close order: connection issue",
+            "not_found": "Issue identifying order to close",
+            "server_error": "Server error while closing order",
+            "default_error": "Error closing order"
+          }
+        },
+        "delete": {
+          "orders": {
+            "network_error": "Unable to delete product: connection issue",
+            "not_found": "Issue identifying product to delete",
+            "server_error": "Server error while deleting product",
+            "default_error": "Error deleting product in order"
+          }
+        },
+        "create": {
+          "orders": {
+            "default_error": "Error creating an order"
+          }
+        },
+        "deleteItem": {
+          "basket": {
+            "network_error": "Unable to delete product in basket: connection issue",
+            "not_found": "Issue identifying product in basket to delete",
+            "server_error": "Server error while deleting product in basket",
+            "default_error": "Error deleting product in basket"
+          }
+        },
+        "updateQuantity": {
+          "basket": {
+            "network_error": "Unable to update product quantity in basket: connection issue",
+            "not_found": "Issue identifying product in basket to update",
+            "server_error": "Server error while updating product quantity in basket",
+            "default_error": "Error updating product quantity in basket"
+          }
+        },
+        "addItem": {
+          "basket": {
+            "network_error": "Unable to add product to basket: connection issue",
+            "not_found": "Issue identifying product to add to basket",
+            "server_error": "Server error while adding product to basket",
+            "default_error": "Error adding product to basket"
+          }
+        }
+      }
+    },
+    "it": {
+      "api": {
+        "common": {
+          "network_error": "Problema di connessione al server",
+          "server_error": "Si è verificato un errore del server",
+          "not_found": "Risorsa non trovata",
+          "default_error": "Si è verificato un errore"
+        },
+        "fetch": {
+          "types": {
+            "network_error": "Impossibile recuperare i tipi: problema di connessione",
+            "not_found": "Tipi richiesti non trovati",
+            "server_error": "Errore del server durante il recupero dei tipi",
+            "default_error": "Errore nel recupero dei tipi"
+          },
+          "orders": {
+            "network_error": "Impossibile recuperare gli ordini: problema di connessione",
+            "not_found": "Ordini richiesti non trovati",
+            "server_error": "Errore del server durante il recupero degli ordini",
+            "default_error": "Errore nel recupero degli ordini"
+          },
+          "finlorders": {
+            "network_error": "Impossibile recuperare l'ordine finale: problema di connessione",
+            "not_found": "Ordine finale richiesto non trovato",
+            "server_error": "Errore del server durante il recupero dell'ordine finale",
+            "default_error": "Errore nel recupero dell'ordine finale"
+          },
+          "products": {
+            "network_error": "Impossibile recuperare i prodotti: problema di connessione",
+            "not_found": "Prodotti richiesti non trovati",
+            "server_error": "Errore del server durante il recupero dei prodotti",
+            "default_error": "Errore nel recupero dei prodotti"
+          },
+          "productsprice": {
+            "network_error": "Impossibile recuperare i prodotti con i prezzi: problema di connessione",
+            "not_found": "Prodotti con i prezzi richiesti non trovati",
+            "server_error": "Errore del server durante il recupero dei prodotti con i prezzi",
+            "default_error": "Errore nel recupero dei prodotti con i prezzi"
+          },
+          "productsbytype": {
+            "network_error": "Impossibile recuperare i prodotti per tipo: problema di connessione",
+            "not_found": "Prodotti per tipo richiesti non trovati",
+            "server_error": "Errore del server durante il recupero dei prodotti per tipo",
+            "default_error": "Errore nel recupero dei prodotti per tipo"
+          },
+          "productsbyid": {
+            "network_error": "Impossibile recuperare il prodotto: problema di connessione",
+            "not_found": "Prodotto richiesto non trovato",
+            "server_error": "Errore del server durante il recupero del prodotto",
+            "default_error": "Errore nel recupero del prodotto"
+          }
+        },
+        "finish": {
+          "orders": {
+            "network_error": "Impossibile chiudere l'ordine: problema di connessione",
+            "not_found": "Problema nell'identificare l'ordine da chiudere",
+            "server_error": "Errore del server durante la chiusura dell'ordine",
+            "default_error": "Errore nella chiusura dell'ordine"
+          }
+        },
+        "delete": {
+          "orders": {
+            "network_error": "Impossibile eliminare il prodotto: problema di connessione",
+            "not_found": "Problema nell'identificare il prodotto da eliminare",
+            "server_error": "Errore del server durante l'eliminazione del prodotto",
+            "default_error": "Errore nell'eliminazione del prodotto in un ordine"
+          }
+        },
+        "create": {
+          "orders": {
+            "default_error": "Errore nella creazione dell'ordine"
+          }
+        },
+        "deleteItem": {
+          "basket": {
+            "network_error": "Impossibile eliminare il prodotto nel carrello: problema di connessione",
+            "not_found": "Problema nell'identificare il prodotto nel carrello da eliminare",
+            "server_error": "Errore del server durante l'eliminazione del prodotto nel carrello",
+            "default_error": "Errore nell'eliminazione del prodotto nel carrello"
+          }
+        },
+        "updateQuantity": {
+          "basket": {
+            "network_error": "Impossibile aggiornare la quantità del prodotto nel carrello: problema di connessione",
+            "not_found": "Problema nell'identificare il prodotto nel carrello da aggiornare",
+            "server_error": "Errore del server durante l'aggiornamento della quantità del prodotto nel carrello",
+            "default_error": "Errore nell'aggiornamento della quantità del prodotto nel carrello"
+          }
+        },
+        "addItem": {
+          "basket": {
+            "network_error": "Impossibile aggiungere il prodotto al carrello: problema di connessione",
+            "not_found": "Problema nell'identificare il prodotto da aggiungere al carrello",
+            "server_error": "Errore del server durante l'aggiunta del prodotto al carrello",
+            "default_error": "Errore nell'aggiunta del prodotto al carrello"
+          }
+        }
+      }
+    },
+    "api": {
+      "common": {
+        "network_error": "Server connection issue",
+        "server_error": "A server error occurred",
+        "not_found": "Resource not found",
+        "default_error": "An error occurred"
+      }
+  }
+  }
