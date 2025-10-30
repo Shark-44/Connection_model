@@ -1,25 +1,7 @@
+// src/api/userService.tsx
 import { apiCall } from './apiWrapper';
-import { User } from "../types/types";
+import { User, LoginResponse } from "../types/types";
 
-export const login = async (
-    name: string,
-    password: string
-): Promise<User> => {
-    const userData = {
-        name,
-        password,
-    }
-    return apiCall<User>('post', '/connexion', {
-        data: userData,
-        errorNamespace: '{lang}.api.login.user',
-    });
-};
-export const logout = async (): Promise<User> => {
-
-    return apiCall<User>('get', '/connexion', {
-        errorNamespace: '{lang}.api.logout.user',
-    });
-};
 
 export const createUser = async (
     username: string,
@@ -35,5 +17,28 @@ export const createUser = async (
     return apiCall<User>('post', '/admin-user', {
       data: userData,
       errorNamespace: '.api.createuser.user',
+    });
+  };
+
+  // 🔐 Connexion utilisateur (avec identifier)
+export const login = async (
+    identifier: string,
+    password: string
+  ): Promise<LoginResponse> => {
+    const userData = {
+      identifier,
+      password,
+    };
+  
+    return apiCall<LoginResponse>('post', '/login', {
+      data: userData,
+      errorNamespace: '{lang}.api.login.user',
+    });
+  };
+  
+  // 🚪 Déconnexion
+  export const logout = async (): Promise<User> => {
+    return apiCall<User>('post', '/logout', {
+      errorNamespace: '{lang}.api.logout.user',
     });
   };

@@ -1,9 +1,10 @@
+// src/components/LoginCards.tsx
 import { useState } from "react";
 import type { FormEvent } from "react";
 import "./AuthCard.css";
 
 interface LoginCredentials {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -12,12 +13,12 @@ interface LoginCardProps {
 }
 
 const LoginCard = ({ onLogin }: LoginCardProps) => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onLogin({ email, password });
+    onLogin({ identifier, password });
   };
 
   return (
@@ -25,12 +26,12 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
       <h2>Connexion</h2>
       <form onSubmit={handleSubmit}>
         <div className="input-group">
-          <label>Email</label>
+          <label>Nom d’utilisateur ou e-mail</label>
           <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="Nom d’utilisateur ou e-mail"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             required
           />
         </div>
@@ -51,3 +52,4 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
 };
 
 export default LoginCard;
+
