@@ -109,4 +109,4 @@ Gérer les modifications de schéma de manière versionnée
 
 Faciliter l’intégration d’un nouveau collaborateur sans manipulation manuelle de SQL
 
-![Texte alternatif](\Doc\images\schema migrate.png)
+![Schéma de migration](Doc/images/schema_migrate.png)
