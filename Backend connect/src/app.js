@@ -1,19 +1,17 @@
-import express from 'express';
+import express from "express";
+import dotenv from "dotenv";
 import cors from 'cors';
-import morgan from 'morgan';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-import router from './router.js';  
+import sequelize from "./config/database.js";
+import { User, Role, UserRole } from "./models/userRole.model.js";
+import userRoutes from "./routes/user.routes.js";
 
+
+dotenv.config();
 const app = express();
-
-app.use(morgan('dev'));
-app.use(helmet());
-
-
+app.use(express.json());
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: "http://localhost:5173",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -21,10 +19,17 @@ app.use(
   })
 );
 
-app.use(cookieParser());
-app.use(express.json());
+// Test route
+app.get("/", (req, res) => res.send("API en ligne 🚀"));
 
 // Routes
-app.use(router);
+app.use("/", userRoutes);
 
-export default app;
+// Synchronisation base
+sequelize
+  .sync({ alter: true })
+  .then(() => console.log("✅ Base synchronisée avec succès"))
+  .catch((err) => console.error("Erreur de connexion DB:", err));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Serveur en écoute sur le port ${PORT}`));

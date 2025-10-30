@@ -1,10 +1,11 @@
 import express from 'express';
-import { login, createuser, logout } from './controllers/userController.js';
+import { createuser, login } from './controllers/userController.js';
+import { hashPassword } from './middlewares/auth.js';
 
 const router = express.Router();
 
+router.post('/admin-user', hashPassword, createuser);
 router.post('/login', login);
-router.post('/admin-user', createuser);
-router.post('/logout', logout);
 
 export default router;
+
