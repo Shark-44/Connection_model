@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from 'cors';
 import sequelize from "./config/database.js";
+import morgan from 'morgan';
+import helmet from 'helmet';
 import { User, Role, UserRole } from "./models/userRole.model.js";
 import userRoutes from "./routes/user.routes.js";
 
@@ -18,6 +20,9 @@ app.use(
     optionsSuccessStatus: 200,
   })
 );
+
+app.use(morgan('dev'));
+app.use(helmet());
 
 // Test route
 app.get("/", (req, res) => res.send("API en ligne 🚀"));
