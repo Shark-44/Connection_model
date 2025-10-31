@@ -30,28 +30,71 @@ export const hashPassword = async (req, res, next) => {
 };
 
 // Middleware pour vérifier le mot de passe (utilisable lors du login)
+// Ajout de rate timiling
 export const verifyPassword = async (req, res, next) => {
   try {
-    const { password } = req.body;
-    const user = req.user; // req.user devrait être défini avant (ex: par une requête SQL)
-
-    if (!user || !user.password) {
-      return res.status(401).json({ message: "Utilisateur non trouvé" });
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Identifiant et mot de passe requis" });
     }
 
-    const valid = await argon2.verify(user.password, password);
-    if (!valid) {
-      return res.status(401).json({ message: "Identifiants invalides" });
+    // Recherche par email OU username
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: identifier },
+          { username: identifier }
+        ]
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
-    // Génération du token JWT
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    // Vérification du rate limiting
+    const now = new Date();
+    const { failed_attempts, last_failed_attempt } = user;
+    const timeSinceLastAttempt = now - new Date(last_failed_attempt);
 
-    res.cookie("auth_token", token, { httpOnly: true, secure: false });
-    res.status(200).json({ message: "Connexion réussie ✅", user });
+    if (failed_attempts >= 3 && timeSinceLastAttempt < 15 * 60 * 1000) {
+      return res.status(403).json({
+        message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
+      });
+    }
 
+    // Vérification du mot de passe
+    const isValid = await argon2.verify(user.password, password);
+    if (!isValid) {
+      // Incrémente le compteur de tentatives échouées
+      await User.update(
+        {
+          failed_attempts: failed_attempts + 1,
+          last_failed_attempt: now,
+        },
+        { where: { id: user.id } }
+      );
+      return res.status(401).json({ message: "Mot de passe incorrect" });
+    }
+
+    // Réinitialise le compteur si la connexion réussit
+    if (failed_attempts > 0) {
+      await User.update(
+        {
+          failed_attempts: 0,
+          last_failed_attempt: null,
+        },
+        { where: { id: user.id } }
+      );
+    }
+
+    // Génération du token
+    const token = generateToken(user);
+    req.user = user;
+    req.token = token;
+    next();
   } catch (err) {
     console.error("Erreur de vérification :", err);
-    res.status(500).json({ message: "Erreur serveur pendant la vérification" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
