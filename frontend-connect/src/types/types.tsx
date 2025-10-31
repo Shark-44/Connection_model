@@ -8,3 +8,9 @@ export interface User {
   created_at?: string; 
   updated_at?: string; 
 }
+
+export interface LoginResponse {
+  message: string;
+  token: string;
+  user: User;
+}

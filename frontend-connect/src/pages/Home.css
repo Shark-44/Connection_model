@@ -14,3 +14,18 @@
     color: white;
     cursor: pointer;
   }
+
+  .welcome-container {
+    text-align: center;
+    margin-top: 2rem;
+  }
+  
+  .logoutButton {
+    margin-top: 1rem;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+  }

@@ -1,27 +1,26 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
+import { Op } from "sequelize";
 
-// Configuration sécurisée pour Argon2id
+// ⚙️ Configuration Argon2id
 const hashingOptions = {
   type: argon2.argon2id,
-  memoryCost: 2 ** 16, // mémoire utilisée
-  timeCost: 5,         // temps de calcul (plus haut = plus sûr, mais plus lent)
-  parallelism: 1,      // threads utilisés
+  memoryCost: 2 ** 16,
+  timeCost: 5,
+  parallelism: 1,
 };
 
-// Middleware pour hasher le mot de passe
+// 🧂 Middleware pour hasher le mot de passe avant création
 export const hashPassword = async (req, res, next) => {
   try {
     const { password } = req.body;
-
     if (!password) {
       return res.status(400).json({ message: "Mot de passe requis" });
     }
-
     const hashedPassword = await argon2.hash(password, hashingOptions);
     req.body.hashedPassword = hashedPassword;
-    delete req.body.password; // on supprime le mot de passe brut pour éviter tout risque
-
+    delete req.body.password; // Supprime la version brute du mot de passe
     next();
   } catch (err) {
     console.error("Erreur de hachage :", err);
@@ -30,7 +29,6 @@ export const hashPassword = async (req, res, next) => {
 };
 
 // Middleware pour vérifier le mot de passe (utilisable lors du login)
-// Ajout de rate timiling
 export const verifyPassword = async (req, res, next) => {
   try {
     const { identifier, password } = req.body;
@@ -52,49 +50,19 @@ export const verifyPassword = async (req, res, next) => {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
-    // Vérification du rate limiting
-    const now = new Date();
-    const { failed_attempts, last_failed_attempt } = user;
-    const timeSinceLastAttempt = now - new Date(last_failed_attempt);
-
-    if (failed_attempts >= 3 && timeSinceLastAttempt < 15 * 60 * 1000) {
-      return res.status(403).json({
-        message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
-      });
+    const valid = await argon2.verify(user.password, password);
+    if (!valid) {
+      return res.status(401).json({ message: "Identifiants invalides" });
     }
 
-    // Vérification du mot de passe
-    const isValid = await argon2.verify(user.password, password);
-    if (!isValid) {
-      // Incrémente le compteur de tentatives échouées
-      await User.update(
-        {
-          failed_attempts: failed_attempts + 1,
-          last_failed_attempt: now,
-        },
-        { where: { id: user.id } }
-      );
-      return res.status(401).json({ message: "Mot de passe incorrect" });
-    }
+    // Génération du token JWT
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    // Réinitialise le compteur si la connexion réussit
-    if (failed_attempts > 0) {
-      await User.update(
-        {
-          failed_attempts: 0,
-          last_failed_attempt: null,
-        },
-        { where: { id: user.id } }
-      );
-    }
+    res.cookie("auth_token", token, { httpOnly: true, secure: false });
+    res.status(200).json({ message: "Connexion réussie ✅", user });
 
-    // Génération du token
-    const token = generateToken(user);
-    req.user = user;
-    req.token = token;
-    next();
   } catch (err) {
     console.error("Erreur de vérification :", err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: "Erreur serveur pendant la vérification" });
   }
 };
