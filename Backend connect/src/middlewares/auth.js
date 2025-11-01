@@ -66,11 +66,26 @@ export const verifyPassword = async (req, res, next) => {
     const { failed_attempts, last_failed_attempt } = user;
     const timeSinceLastAttempt = now - new Date(last_failed_attempt);
 
-    if (failed_attempts >= 3 && timeSinceLastAttempt < 15 * 60 * 1000) {
-      return res.status(403).json({
-        message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
-      });
-    }
+    // Réinitialise le compteur si 15 minutes se sont écoulées depuis la dernière tentative échouée
+if (failed_attempts > 0 && timeSinceLastAttempt >= 15 * 60 * 1000) {
+  await User.update(
+    {
+      failed_attempts: 0,
+      last_failed_attempt: null,
+    },
+    { where: { id: user.id } }
+  );
+  // Rafraîchit l'objet user pour avoir les valeurs à jour
+  user.failed_attempts = 0;
+  user.last_failed_attempt = null;
+}
+
+// Vérifie si l'utilisateur est bloqué
+if (failed_attempts >= 3) {
+  return res.status(403).json({
+    message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
+  });
+}
 
     // Vérification du mot de passe
     const isValid = await argon2.verify(user.password, password);
