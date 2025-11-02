@@ -61,10 +61,55 @@ export const verifyPassword = async (req, res, next) => {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
+    // Vérification du rate limiting
+    const now = new Date();
+    const { failed_attempts, last_failed_attempt } = user;
+    const timeSinceLastAttempt = now - new Date(last_failed_attempt);
+
+    // Réinitialise le compteur si 15 minutes se sont écoulées depuis la dernière tentative échouée
+if (failed_attempts > 0 && timeSinceLastAttempt >= 15 * 60 * 1000) {
+  await User.update(
+    {
+      failed_attempts: 0,
+      last_failed_attempt: null,
+    },
+    { where: { id: user.id } }
+  );
+  // Rafraîchit l'objet user pour avoir les valeurs à jour
+  user.failed_attempts = 0;
+  user.last_failed_attempt = null;
+}
+
+// Vérifie si l'utilisateur est bloqué
+if (failed_attempts >= 3) {
+  return res.status(403).json({
+    message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
+  });
+}
+
     // Vérification du mot de passe
     const isValid = await argon2.verify(user.password, password);
     if (!isValid) {
+      // Incrémente le compteur de tentatives échouées
+      await User.update(
+        {
+          failed_attempts: failed_attempts + 1,
+          last_failed_attempt: now,
+        },
+        { where: { id: user.id } }
+      );
       return res.status(401).json({ message: "Mot de passe incorrect" });
+    }
+
+    // Réinitialise le compteur si la connexion réussit
+    if (failed_attempts > 0) {
+      await User.update(
+        {
+          failed_attempts: 0,
+          last_failed_attempt: null,
+        },
+        { where: { id: user.id } }
+      );
     }
 
     // Génération du token

@@ -1,6 +1,9 @@
 // src/components/LoginCards.tsx
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { APIError } from '../api/apiWrapper';
+
+
 import "./AuthCard.css";
 
 interface LoginCredentials {
@@ -15,10 +18,25 @@ interface LoginCardProps {
 const LoginCard = ({ onLogin }: LoginCardProps) => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    onLogin({ identifier, password });
+    setError(null);
+
+    try {
+      await onLogin({ identifier, password });
+    } catch (err) {
+      
+      if (err instanceof APIError) {
+        // Affiche le message d'erreur déjà traduit par apiCall
+        
+        setError(err.message);
+        
+      } else {
+        setError("Une erreur inattendue est survenue.");
+      }
+    }
   };
 
   return (
@@ -45,6 +63,12 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
             required
           />
         </div>
+        
+        {error && (
+          <div key={error} className="error-message">
+            {error}
+          </div>
+        )}
         <button type="submit">Se connecter</button>
       </form>
     </div>

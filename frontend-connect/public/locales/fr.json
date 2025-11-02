@@ -1,0 +1,30 @@
+{
+    "api": {
+      "login": {
+        "user": {
+          "401": "Nom d’utilisateur ou mot de passe incorrect.",
+          "403": "compte bloqué",
+          "404": "Nom d’utilisateur ou mot de passe incorrect.",
+          "default_error": "Erreur de connexion."
+        }
+      },
+      "createuser": {
+        "user": {
+          "400": "Données invalides.",
+          "default_error": "Erreur lors de la création de l’utilisateur."
+        }
+      },
+      "logout": {
+        "user": {
+          "default_error": "Erreur lors de la déconnexion."
+        }
+      },
+      "common": {
+        "network_error": "Impossible de se connecter au serveur.",
+        "not_found": "Ressource introuvable.",
+        "server_error": "Erreur interne du serveur.",
+        "default_error": "Une erreur est survenue."
+      }
+    }
+  }
+  

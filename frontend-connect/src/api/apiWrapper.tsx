@@ -1,8 +1,8 @@
 // src/api/apiWrapper.ts
 import { AxiosError, AxiosRequestConfig } from 'axios';
-import i18n from '../i18n';
+import i18n from '../i18n.ts';
 import api from './axiosInstance';
-import errors from '../Locales/errors.json';
+
 
 
 export class APIError extends Error {
@@ -15,7 +15,6 @@ export class APIError extends Error {
     this.name = 'APIError';
   }
 }
-
 
 export async function apiCall<T>(
   method: 'get' | 'post' | 'put' | 'delete',
@@ -36,28 +35,30 @@ export async function apiCall<T>(
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError;
-
     let errorMessage: string;
+    const namespace = options?.errorNamespace || 'api.common';
+
     if (!axiosError.response) {
-      errorMessage = i18n.t(errors.api.common.network_error);
+      errorMessage = i18n.t(`${namespace}.network_error`);
     } else {
-      switch (axiosError.response.status) {
-        case 404:
-          errorMessage = i18n.t(`${options?.errorNamespace}.not_found`);
-          break;
-        case 500:
-          errorMessage = i18n.t(`${options?.errorNamespace}.server_error`);
-          break;
-        default:
-          errorMessage = i18n.t(`${options?.errorNamespace}.default_error`);
+      const status = axiosError.response.status;
+      const errorKey = `${namespace}.${status}`;
+      
+      try {
+        errorMessage = i18n.t(errorKey);
+        
+      } catch (e) {
+        errorMessage = i18n.t(`${namespace}.default_error`);
       }
     }
+
     console.error('API Error:', {
       endpoint,
       status: axiosError.response?.status,
       message: errorMessage,
-      originalError: axiosError
+      originalError: axiosError,
     });
+
     throw new APIError(
       errorMessage,
       axiosError.response?.status,

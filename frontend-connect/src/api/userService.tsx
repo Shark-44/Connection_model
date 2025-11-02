@@ -16,7 +16,7 @@ export const createUser = async (
     };
     return apiCall<User>('post', '/admin-user', {
       data: userData,
-      errorNamespace: '.api.createuser.user',
+      errorNamespace: 'api.createuser.user',
     });
   };
 
@@ -32,13 +32,13 @@ export const login = async (
   
     return apiCall<LoginResponse>('post', '/login', {
       data: userData,
-      errorNamespace: '{lang}.api.login.user',
+      errorNamespace: 'api.login.user',
     });
   };
   
   // 🚪 Déconnexion
   export const logout = async (): Promise<User> => {
     return apiCall<User>('post', '/logout', {
-      errorNamespace: '{lang}.api.logout.user',
+      errorNamespace: 'api.logout.user',
     });
   };

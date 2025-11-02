@@ -24,6 +24,15 @@ const User = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    // 👇 Nouveau : suivi des tentatives de connexion
+    failed_attempts: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    last_failed_attempt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",

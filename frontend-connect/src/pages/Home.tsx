@@ -3,31 +3,24 @@ import LoginCard from "../components/LoginCard";
 import RegisterCard from "../components/RegisterCard";
 import { login, logout } from "../api/userService";
 import "./Home.css";
-
+interface LoginCredentials {
+  identifier: string;
+  password: string;
+}
 function Home() {
   const [showLogin, setShowLogin] = useState(true);
   const [user, setUser] = useState<{ username: string } | null>(null); // 👈 état pour l'utilisateur connecté
 
-  const handleLogin = async ({
-    identifier,
-    password,
-  }: {
-    identifier: string;
-    password: string;
-  }) => {
+  const handleLogin = async ({ identifier, password }: LoginCredentials) => {
     console.log("Tentative de connexion avec :", identifier, password);
-
-    try {
-      const response = await login(identifier, password);
-      console.log("✅ Connexion réussie :", response);
-
-      // ✅ Stocke le token et l'utilisateur dans le state (et localStorage si tu veux persister)
-      setUser(response.user);
-      localStorage.setItem("token", response.token);
-    } catch (error) {
-      console.error("❌ Erreur de connexion :", error);
-    }
+    const response = await login(identifier, password); // L'erreur remontera à LoginCard
+    console.log("✅ Connexion réussie :", response);
+    setUser(response.user);
+    localStorage.setItem("token", response.token);
   };
+  
+
+  
 
 
   const handleLogout = async () => {
