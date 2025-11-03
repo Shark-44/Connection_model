@@ -42,3 +42,18 @@ export const login = async (
       errorNamespace: 'api.logout.user',
     });
   };
+
+  export const forgotPassword = async (email: string): Promise<{ message: string }> => {
+    return apiCall<{ message: string }>('post', '/auth/forgot-password', {
+      data: { email },
+      errorNamespace: 'api.forgotPassword.user',
+    });
+  };
+
+  export const resetPassword = async (token: string, password: string): Promise<{ message: string }> => {
+    return apiCall<{ message: string }>('post', '/auth/reset-password', {
+      data: { token, password },
+      errorNamespace: 'api.resetPassword.user',
+    });
+  };
+  
