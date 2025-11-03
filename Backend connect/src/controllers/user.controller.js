@@ -13,7 +13,7 @@ export const createuser = async (req, res) => {
      // Vérifier si l'email existe déjà
      const existingEmail = await User.findOne({ where: { email } });
      if (existingEmail) {
-       return res.status(401).json({ message: "Cette adresse email est déjà utilisée." });
+       return res.status(409).json({ message: "Email déjà utilisé" });
      }
  
      /* Vérifier si le nom d’utilisateur existe déjà (optionnel mais souvent utile)

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createUser } from "../api/userService";
+import { APIError } from '../api/apiWrapper';
 //import PopUp from '../components/specificPageComponents/PopUp';
 //  <PopUp openPopUp={openPopup} closePopUp={closePopUp} />
 import "./AuthCard.css";
@@ -11,17 +12,21 @@ const RegisterCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [openPopup, setOpenPopup] = useState<boolean>(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
-      const loggedInUser = await createUser(username,email, password);
-      console.log("Utilisateur créé:", loggedInUser);
+       await createUser(username,email, password);
+      
       setOpenPopup(true);
-      setError(null);
+      
     } catch (err) {
-      console.error("Erreur d'inscription :", err);
-      setError("Erreur lors de l'inscription.");
+      if (err instanceof APIError){
+      setError(err.message);
       setOpenPopup(false);
+    } else {
+      setError("Une erreur inattendue est survenue.");
+    }
     }
   };
 
@@ -78,7 +83,11 @@ const RegisterCard = () => {
             required
           />
         </div>
-        {error && <p className="error-message">{error}</p>}
+        {error && (
+          <div key={error} className="error-message">
+            {error}
+          </div>
+        )}
         <button type="submit">S'inscrire</button>
       </form>
     

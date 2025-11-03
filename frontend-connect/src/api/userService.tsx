@@ -1,20 +1,20 @@
 // src/api/userService.tsx
 import { apiCall } from './apiWrapper';
-import { User, LoginResponse } from "../types/types";
+import { User, CreateReponse, LoginResponse } from "../types/types";
 
 
 export const createUser = async (
     username: string,
     email: string,
     password: string
-  ): Promise<User> => {
+  ): Promise<CreateReponse> => {
 
     const userData = {
         username,
         email,
         password,
     };
-    return apiCall<User>('post', '/admin-user', {
+    return apiCall<CreateReponse>('post', '/admin-user', {
       data: userData,
       errorNamespace: 'api.createuser.user',
     });

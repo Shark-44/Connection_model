@@ -11,6 +11,7 @@
       "createuser": {
         "user": {
           "400": "Données invalides.",
+          "409": "Adresse mail déjà utilisé",
           "default_error": "Erreur lors de la création de l’utilisateur."
         }
       },
