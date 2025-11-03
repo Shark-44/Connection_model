@@ -12,3 +12,4 @@ Un frontend sous react/typescript pour garder des habitude.
 5. Chapitre sur migrate pour savoir partager ma bdd.
 6. Login/logout avec token avec connection soit par username ou email. (ajout de helmet et morgan)
 7. Mise en place d'un rate limiting. Apres 3 tentatives bloquage du compte et attente 15 min. C'est un scenario mais qui peut ouvrir a d'autres...
+8. Verification d'email existant ( + option username)
