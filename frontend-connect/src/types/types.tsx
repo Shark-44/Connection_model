@@ -14,3 +14,8 @@ export interface LoginResponse {
   token: string;
   user: User;
 }
+
+export interface CreateReponse {
+  message: string;
+  user: User;
+}

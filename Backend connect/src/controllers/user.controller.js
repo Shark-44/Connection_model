@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
-import { Op } from "sequelize";
+
 
 export const createuser = async (req, res) => {
   try {
@@ -9,6 +9,18 @@ export const createuser = async (req, res) => {
     if (!username || !email || !hashedPassword) {
       return res.status(400).json({ message: "Champs requis manquants" });
     }
+
+     // Vérifier si l'email existe déjà
+     const existingEmail = await User.findOne({ where: { email } });
+     if (existingEmail) {
+       return res.status(409).json({ message: "Email déjà utilisé" });
+     }
+ 
+     /* Vérifier si le nom d’utilisateur existe déjà (optionnel mais souvent utile)
+     const existingUsername = await User.findOne({ where: { username } });
+     if (existingUsername) {
+       return res.status(400).json({ message: "Ce nom d'utilisateur est déjà pris." });
+     }*/
 
     const user = await User.create({
       username,
