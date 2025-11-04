@@ -1,8 +1,8 @@
-### La réinitialisation 
-# Objectif
+#La réinitialisation 
+## Objectif
 Permettre à un utilisateur qui a oublié son mot de passe de recevoir un lien par mail pour le réinitialiser.
 ________________________________________
-# Étapes du processus
+## Étapes du processus
 1.	L’utilisateur clique sur “Mot de passe oublié ?”
 → Il saisit son email dans un formulaire.
 2.	Le frontend (React)
@@ -23,12 +23,12 @@ http://localhost:5173/reset-password?token=xxxxx).
 → Si valide, met à jour le mot de passe de l’utilisateur.
 → Confirme la réinitialisation.
 ________________________________________
-# Envoi du mail (avec Nodemailer)
+##Envoi du mail (avec Nodemailer)
 Pour les tests, on utilise Ethereal, un faux serveur d’emails :
 •	Il simule l’envoi (rien n’est réellement envoyé).
 •	Tu peux ouvrir un lien web pour voir le mail généré.
 ________________________________________
-# Points clés
+## Points clés
 •	Le token est temporaire et signé (JWT).
 •	Le mot de passe est mis à jour seulement si le token est valide.
 •	Ethereal sert uniquement pour les tests avant d’utiliser un vrai service mail.
@@ -38,3 +38,4 @@ ________________________________________
 et ![Boite mail Ethereal](./images/capture2.PNG)
 
 
+0
