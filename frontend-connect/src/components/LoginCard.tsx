@@ -2,6 +2,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { APIError } from '../api/apiWrapper';
+import { useNavigate } from "react-router-dom";
+
+
 
 
 import "./AuthCard.css";
@@ -19,6 +22,7 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -63,7 +67,9 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
             required
           />
         </div>
-        
+        <p className="forgot-link" onClick={() => navigate("/Forget")}>
+            Mot de passe oublié ?
+        </p>
         {error && (
           <div key={error} className="error-message">
             {error}

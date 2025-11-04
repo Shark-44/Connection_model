@@ -6,7 +6,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import { User, Role, UserRole } from "./models/userRole.model.js";
 import userRoutes from "./routes/user.routes.js";
-
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -25,10 +25,11 @@ app.use(morgan('dev'));
 app.use(helmet());
 
 // Test route
-app.get("/", (req, res) => res.send("API en ligne 🚀"));
+app.get("/", (req, res) => res.send("API en ligne "));
 
 // Routes
 app.use("/", userRoutes);
+app.use("/auth", authRoutes); 
 
 // Synchronisation base
 sequelize
