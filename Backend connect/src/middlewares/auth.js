@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import { Op } from "sequelize";
 
-// ⚙️ Configuration Argon2id
+// Configuration Argon2id
 const hashingOptions = {
   type: argon2.argon2id,
   memoryCost: 2 ** 16,
@@ -11,7 +11,7 @@ const hashingOptions = {
   parallelism: 1,
 };
 
-// 🧂 Middleware pour hasher le mot de passe avant création
+// Middleware pour hasher le mot de passe avant création
 export const hashPassword = async (req, res, next) => {
   try {
     const { password } = req.body;
@@ -66,7 +66,7 @@ export const verifyPassword = async (req, res, next) => {
     const { failed_attempts, last_failed_attempt } = user;
     const timeSinceLastAttempt = now - new Date(last_failed_attempt);
 
-    // Réinitialise le compteur si 15 minutes se sont écoulées depuis la dernière tentative échouée
+    // Réinitialise le compte si 15 minutes se sont coulées depuis la dernière tentative échouée
 if (failed_attempts > 0 && timeSinceLastAttempt >= 15 * 60 * 1000) {
   await User.update(
     {
@@ -126,7 +126,7 @@ if (failed_attempts >= 3) {
   }
 };
 
-// 🛡️ Middleware de vérification du token dans les cookies
+//  Middleware de vérification du token dans les cookies
 export const checkToken = (req, res, next) => {
   try {
     const token = req.cookies?.auth_token;
