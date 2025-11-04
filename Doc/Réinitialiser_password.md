@@ -1,4 +1,4 @@
-#La réinitialisation 
+# La réinitialisation 
 ## Objectif
 Permettre à un utilisateur qui a oublié son mot de passe de recevoir un lien par mail pour le réinitialiser.
 ________________________________________
