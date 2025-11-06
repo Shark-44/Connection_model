@@ -93,3 +93,18 @@ Backend : validation OTP
         ▼
 Si valide → compte activé / JWT (optionnel)
 Si invalide → compte inactif ou suppression
+
+Cette premiere étape realisée je m'interroge sur des sujets:
+
+- La purge faite automatiquement dans sql avec un EVENT:
+```bash
+CREATE EVENT purge_unverified_users
+ON SCHEDULE EVERY 1 DAY STARTS CURRENT_TIMESTAMP
+DO
+  DELETE FROM users
+  WHERE is_verified = 0
+    AND created_at < NOW() - INTERVAL 3 DAY;
+```
+- Script Node.js (cron / scheduler) pour purger...
+
+Je n'ai pas bloque encore un compte non verifié, etudié la durée de validité d'un OTP. Encore beaucoup de question a la sécurité.

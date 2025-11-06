@@ -34,7 +34,11 @@ app.get("/", (req, res) => res.send("API en ligne "));
 // Routes
 app.use("/", userRoutes);
 app.use("/auth", authRoutes); 
+
 app.use("/auth-verify", authVerify);
+
+
+
 
 // Synchronisation base
 sequelize

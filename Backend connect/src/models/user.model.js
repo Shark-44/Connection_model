@@ -46,6 +46,15 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
+    otp_send: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    otp_last_sent: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",

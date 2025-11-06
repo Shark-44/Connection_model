@@ -8,16 +8,16 @@ export const verifyAccount = async (req, res) => {
     }
 
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ success: false, message: "Utilisateur introuvable" });
+    if (!user) return res.status(426).json({ success: false, message: "Utilisateur introuvable" });
 
     if (user.is_verified)
-      return res.status(400).json({ success: false, message: "Compte déjà vérifié" });
+      return res.status(427).json({ success: false, message: "Compte déjà vérifié" });
 
     if (user.otp_code !== otp)
-      return res.status(401).json({ success: false, message: "Code invalide" });
+      return res.status(428).json({ success: false, message: "Code invalide" });
 
     if (user.otp_expiration < new Date())
-      return res.status(401).json({ success: false, message: "Code expiré" });
+      return res.status(429).json({ success: false, message: "Code expiré" });
 
     // ✅ Validation
     user.is_verified = true;

@@ -15,7 +15,22 @@ export const Verifyservice = async (
     otp,
   };
 
-  return apiCall<VerifyResponse>('post', '/auth-verify', {
+  return apiCall<VerifyResponse>('post', '/auth-verify/verify', {
+    data: userData,
+    errorNamespace: 'api.verify.user',
+  });
+};
+
+export const ResendOTPService = async (
+  email: string,
+
+): Promise<VerifyResponse> => {
+  const userData = {
+    email,
+  
+  };
+
+  return apiCall<VerifyResponse>('post', '/auth-verify/resend', {
     data: userData,
     errorNamespace: 'api.verify.user',
   });
