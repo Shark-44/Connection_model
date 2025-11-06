@@ -19,3 +19,8 @@ export interface CreateReponse {
   message: string;
   user: User;
 }
+
+export interface Reponse {
+  email: string;
+  opt: string;
+}

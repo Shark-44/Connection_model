@@ -33,6 +33,19 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    otp_code: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    otp_expiration: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     tableName: "users",

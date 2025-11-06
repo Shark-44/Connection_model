@@ -3,6 +3,7 @@ import './App.css'
 import Home from "./pages/Home";
 import Forget from "./pages/ForgotPassword";
 import Reset from "./pages/ResetPassword"
+import Verify from "./pages/VerifyOTP";
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/Reset" element={<Reset />} />
         <Route path="/Forget" element={<Forget />} />
+        <Route path="/Verify" element={<Verify />} />
       </Routes>
     </>
   )

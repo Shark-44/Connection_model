@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
-
+import generateOTP from "../utils/generateOTP.js";
+import { sendVerificationEmail } from "../services/mailer.service.js";
 
 export const createuser = async (req, res) => {
   try {
@@ -22,18 +23,34 @@ export const createuser = async (req, res) => {
        return res.status(400).json({ message: "Ce nom d'utilisateur est déjà pris." });
      }*/
 
-    const user = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
+     // Générer le code OTP
+     const otp = generateOTP();
+     const expiration = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+     
+    console.log("OTP généré :", otp);
+    console.log("Expiration :", expiration);
+     
+     // Création de l'utilisateur non vérifié
+     const user = await User.create({
+       username,
+       email,
+       password: hashedPassword,
+       is_verified: false,
+       otp_code: otp,
+       otp_expiration: expiration,
+     });
 
     if (roles && roles.length > 0) {
       const rolesDb = await Role.findAll({ where: { name: roles } });
       await user.setRoles(rolesDb);
     }
 
-    res.status(201).json({ message: "Utilisateur créé avec succès", user });
+    // Envoi du mail
+    await sendVerificationEmail(email, otp);
+
+    res.status(201).json({
+      message: "Utilisateur créé. Un code de vérification a été envoyé par email.",
+    });
   } catch (err) {
     console.error("Erreur création utilisateur :", err);
     res.status(500).json({ message: "Erreur serveur" });

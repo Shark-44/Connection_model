@@ -1,47 +1,37 @@
 # Double authentification (2FA) — Introduction et démarche
 
-## Objectif du module de connexion
+## Objectif du module de création de compte sécurisé
 
-Ce projet a pour objectif de proposer un modèle de connexion sécurisé et réutilisable.
-Il s’agit d’un exemple concret de bonnes pratiques d’authentification, combinant simplicité, pédagogie et sécurité.
+Ce projet propose un modèle de création de compte sécurisé et réutilisable, illustrant les bonnes pratiques d’authentification avec simplicité et pédagogie.
 
-La connexion est la porte d’entrée principale d’une application.
-Elle représente donc un point critique pour la sécurité : mot de passe faible, réutilisé ou volé peuvent compromettre les données utilisateurs.
-
-Pour y remédier, ce modèle intègre :
+La création d’un compte est un moment critique : des informations invalides, des mots de passe faibles ou un email compromis peuvent nuire à la sécurité. Pour y remédier, ce modèle intègre :
 
 - le hashage des mots de passe via Argon2id,
 
 - un rate limiting pour bloquer les tentatives abusives,
 
-- une double authentification (2FA) par code email.
+- une validation par code temporaire (OTP) envoyé par email, pour garantir que l’adresse email est bien détenue par l’utilisateur.
 
-## Pourquoi ajouter une double authentification
+## Pourquoi ajouter une validation par code (OTP) à la création de compte
 
-La double authentification (2FA) ajoute une seconde étape après la saisie du mot de passe.
-Elle permet de vérifier que la personne qui tente de se connecter est bien le véritable utilisateur, même si ses identifiants ont été compromis.
+La validation par code envoyé à l’email ajoute une étape de vérification : elle confirme que l’utilisateur est bien propriétaire de l’adresse email fournie, même si le mot de passe est compromis ou mal choisi.
 
-Les bénéfices principaux :
+Bénéfices principaux :
 
-🔒 Renforcer la sécurité des comptes
-
-🚫 Réduire les risques d’accès non autorisés
-
+🔒 Sécuriser la création du compte
+🚫 Éviter les comptes invalides ou frauduleux
 🧠 Montrer une démarche de développement responsable
-
-⚖️ S’inscrire dans le cadre du RGPD et de la protection des données
+⚖️ Respecter les bonnes pratiques de protection des données (RGPD)
 
 ## Démarche de conception
 
-Ce projet ne vise pas à tout implémenter, mais à montrer une conscience claire des menaces et des solutions.
-L’objectif est double :
+Ce projet vise à montrer une approche simple mais réaliste de la sécurité, avec deux objectifs :
 
-1. Mettre en œuvre une protection réaliste et fonctionnelle.
+Mettre en œuvre une protection fonctionnelle lors de la création de compte.
 
-2. Documenter la démarche pour servir de base à d’autres projets.
+Documenter la démarche pour servir de référence dans d’autres projets.
 
-La sécurité doit être vue comme un processus d’amélioration continue.
-Ce modèle est donc conçu pour être simple, compréhensible et évolutif — une première marche vers des standards plus avancés (TOTP, FIDO2, etc.).
+La sécurité est un processus continu. Ce modèle est donc conçu pour être simple, compréhensible et évolutif — une première marche vers des standards plus avancés (TOTP, FIDO2…).
 
 ## Les principales méthodes de 2FA
 
@@ -64,21 +54,42 @@ J’ai choisi la méthode par code email, car elle :
 
 ### Fonctionnement :
 
-1. L’utilisateur se connecte avec ses identifiants.
+L’utilisateur saisit email et mot de passe (et éventuellement username) sur le formulaire de création de compte.
 
-2. Un code unique et temporaire est généré puis envoyé par mail.
+Le backend crée un utilisateur en attente de validation.
 
-3. L’utilisateur valide ce code pour confirmer sa connexion.
+Un code OTP temporaire est généré et envoyé par email.
 
-## En résumé
+L’utilisateur saisit ce code dans le formulaire de validation.
 
-Cette approche démontre :
+Le backend vérifie le code OTP :
 
-* Une prise de conscience des risques liés à l’authentification.
+Si valide → le compte est activé (et éventuellement un JWT est émis).
 
-* Une application concrète d’une mesure de sécurité additionnelle.
+Si invalide → le compte reste inactif ou est supprimé.
 
-* Une volonté d’évolution vers des standards plus robustes.
+### En résumé
 
-Ce module se veut avant tout une base de référence, que je fais évoluer au fil de mon apprentissage.
-Il illustre ma progression vers des pratiques de développement web plus sûres et professionnelles.
+Page création compte
+        │
+        ▼
+Email + Mot de passe (+ username)
+        │
+        ▼
+Backend : créer utilisateur en “attente de validation”
+        │
+        ▼
+Génération OTP
+        │
+        ▼
+Envoi OTP par mail
+        │
+        ▼
+Utilisateur saisit code OTP
+        │
+        ▼
+Backend : validation OTP
+        │
+        ▼
+Si valide → compte activé / JWT (optionnel)
+Si invalide → compte inactif ou suppression

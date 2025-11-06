@@ -7,6 +7,9 @@ import helmet from 'helmet';
 import { User, Role, UserRole } from "./models/userRole.model.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/authRoutes.js";
+import authVerify from "./routes/authVerifyRoutes.js";
+
+//import { initEmail } from "./services/mailer.service.js";
 
 dotenv.config();
 const app = express();
@@ -23,6 +26,7 @@ app.use(
 
 app.use(morgan('dev'));
 app.use(helmet());
+//await initEmail();
 
 // Test route
 app.get("/", (req, res) => res.send("API en ligne "));
@@ -30,6 +34,7 @@ app.get("/", (req, res) => res.send("API en ligne "));
 // Routes
 app.use("/", userRoutes);
 app.use("/auth", authRoutes); 
+app.use("/auth-verify", authVerify);
 
 // Synchronisation base
 sequelize
