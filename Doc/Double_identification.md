@@ -108,3 +108,9 @@ DO
 - Script Node.js (cron / scheduler) pour purger...
 
 Je n'ai pas bloque encore un compte non verifié, etudié la durée de validité d'un OTP. Encore beaucoup de question a la sécurité.
+
+A- J'ai opté pour un renvoi du code expiré max 5 fois et un code qui peut etre renvoye apres 1 min pour eviter des multiples requetes.
+
+B- j'ai renforcé le login en ajoutant user is_verify 
+
+C- Suites a des essais, la gestion des erreurs devient compliquée donc utilisation d'une logique de metier pour les erreurs.

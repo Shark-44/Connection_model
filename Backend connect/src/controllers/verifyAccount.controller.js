@@ -1,33 +1,19 @@
 import User from "../models/user.model.js";
-export const verifyAccount = async (req, res) => {
+
+export const verifyAccount = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({ success: false, message: "Email et code requis" });
-    }
+    if (!email || !otp) throw { status: 400, message: "Email et code requis" };
 
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(426).json({ success: false, message: "Utilisateur introuvable" });
+    if (!user) throw { status: 426, message: "Utilisateur introuvable" };
+    if (user.is_verified) throw { status: 427, message: "Compte déjà vérifié" };
+    if (user.otp_code !== otp) throw { status: 428, message: "Code invalide" };
+    if (user.otp_expiration < new Date()) throw { status: 429, message: "Code expiré" };
 
-    if (user.is_verified)
-      return res.status(427).json({ success: false, message: "Compte déjà vérifié" });
-
-    if (user.otp_code !== otp)
-      return res.status(428).json({ success: false, message: "Code invalide" });
-
-    if (user.otp_expiration < new Date())
-      return res.status(429).json({ success: false, message: "Code expiré" });
-
-    // ✅ Validation
-    user.is_verified = true;
-    user.otp_code = null;
-    user.otp_expiration = null;
-    await user.save();
-
+    await user.update({ is_verified: true, otp_code: null, otp_expiration: null });
     res.status(200).json({ success: true, message: "Compte vérifié avec succès" });
   } catch (err) {
-    console.error("Erreur vérification compte :", err);
-    res.status(500).json({ success: false, message: "Erreur serveur" });
+    next(err);
   }
 };

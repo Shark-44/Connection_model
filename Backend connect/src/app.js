@@ -37,8 +37,15 @@ app.use("/auth", authRoutes);
 
 app.use("/auth-verify", authVerify);
 
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error(" Erreur attrapée par le ErrorHandler :", err);
 
-
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Erreur interne du serveur",
+  });
+});
 
 // Synchronisation base
 sequelize
