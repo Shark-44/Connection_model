@@ -43,11 +43,12 @@ const generateToken = (user) => {
 export const verifyPassword = async (req, res, next) => {
   try {
     const { identifier, password } = req.body;
+
     if (!identifier || !password) {
       return res.status(400).json({ message: "Identifiant et mot de passe requis" });
     }
 
-    // Recherche par email OU username
+    // ✅ Recherche par email OU username
     const user = await User.findOne({
       where: {
         [Op.or]: [
@@ -61,70 +62,68 @@ export const verifyPassword = async (req, res, next) => {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
-    // Vérification du rate limiting
+    // ✅ Vérifie si l'utilisateur n’a PAS vérifié son compte
+    if (!user.is_verified) {
+      return res.status(403).json({
+        message: "Votre compte n'est pas encore vérifié. Veuillez entrer votre code OTP.",
+        needVerification: true,
+        email: user.email
+      });
+    }
+
+    // ✅ Gestion du rate limiting
     const now = new Date();
     const { failed_attempts, last_failed_attempt } = user;
-    const timeSinceLastAttempt = now - new Date(last_failed_attempt);
 
-    // Réinitialise le compte si 15 minutes se sont coulées depuis la dernière tentative échouée
-if (failed_attempts > 0 && timeSinceLastAttempt >= 15 * 60 * 1000) {
-  await User.update(
-    {
-      failed_attempts: 0,
-      last_failed_attempt: null,
-    },
-    { where: { id: user.id } }
-  );
-  // Rafraîchit l'objet user pour avoir les valeurs à jour
-  user.failed_attempts = 0;
-  user.last_failed_attempt = null;
-}
+    // ✅ Si des tentatives échouées existent et que 15 min sont passées → reset
+    if (failed_attempts > 0 && now - new Date(last_failed_attempt) >= 15 * 60 * 1000) {
+      await user.update({
+        failed_attempts: 0,
+        last_failed_attempt: null
+      });
+    }
 
-// Vérifie si l'utilisateur est bloqué
-if (failed_attempts >= 3) {
-  return res.status(403).json({
-    message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
-  });
-}
+    // ✅ Si trop de tentatives → blocage temporaire
+    if (user.failed_attempts >= 3) {
+      return res.status(403).json({
+        message: "Trop de tentatives échouées. Veuillez réessayer plus tard."
+      });
+    }
 
-    // Vérification du mot de passe
+    // ✅ Vérification du mot de passe
     const isValid = await argon2.verify(user.password, password);
     if (!isValid) {
-      // Incrémente le compteur de tentatives échouées
-      await User.update(
-        {
-          failed_attempts: failed_attempts + 1,
-          last_failed_attempt: now,
-        },
-        { where: { id: user.id } }
-      );
+      // ⛔ Mot de passe incorrect → incrémentation
+      await user.update({
+        failed_attempts: user.failed_attempts + 1,
+        last_failed_attempt: now
+      });
+
       return res.status(401).json({ message: "Mot de passe incorrect" });
     }
 
-    // Réinitialise le compteur si la connexion réussit
-    if (failed_attempts > 0) {
-      await User.update(
-        {
-          failed_attempts: 0,
-          last_failed_attempt: null,
-        },
-        { where: { id: user.id } }
-      );
+    // ✅ Si connexion OK → reset des tentatives
+    if (user.failed_attempts > 0) {
+      await user.update({
+        failed_attempts: 0,
+        last_failed_attempt: null
+      });
     }
 
-    // Génération du token
+    // ✅ Génération du token JWT
     const token = generateToken(user);
 
-    // Attache l'utilisateur et le token à la requête
     req.user = user;
     req.token = token;
 
     next();
+
   } catch (err) {
     console.error("Erreur de vérification :", err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
+
 
 //  Middleware de vérification du token dans les cookies
 export const checkToken = (req, res, next) => {
