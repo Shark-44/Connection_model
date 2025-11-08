@@ -16,3 +16,4 @@ Un frontend sous react/typescript pour garder des habitude.
 9. Reinitialisation du mot de passe
 10. Double identification
 11. Joi la validité des données venant du front.
+12. Les cookies

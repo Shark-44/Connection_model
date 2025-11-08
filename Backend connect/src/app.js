@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from 'cookie-parser';
 import dotenv from "dotenv";
 import cors from 'cors';
 import sequelize from "./config/database.js";
@@ -13,7 +14,11 @@ import authVerify from "./routes/authVerifyRoutes.js";
 
 dotenv.config();
 const app = express();
+
+app.use(cookieParser());
+
 app.use(express.json());
+
 app.use(
   cors({
     origin: "http://localhost:5173",

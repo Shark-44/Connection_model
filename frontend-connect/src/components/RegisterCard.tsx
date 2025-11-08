@@ -122,7 +122,7 @@ const RegisterCard = () => {
         )}
         <button
           type="submit"
-          disabled={!username.trim() || !email || !password || passwordStrength < 8}
+          disabled={!username.trim() || !email || !password || passwordStrength > 7}
         >
           S'inscrire
         </button>

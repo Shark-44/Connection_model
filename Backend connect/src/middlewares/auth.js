@@ -27,7 +27,7 @@ export const hashPassword = async (req, res, next) => {
 };
 
 // Génération JWT
-const generateToken = (user) => {
+export const generateToken = (user) => {
   const payload = {
     sub: user.id,
     username: user.username,

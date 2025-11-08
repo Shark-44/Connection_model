@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
 import generateOTP from "../utils/generateOTP.js";
 import { sendVerificationEmail } from "../services/mailer.service.js";
+import { generateToken } from "../middlewares/auth.js";
 
 // ---------------------------------------------------------
 // ✅ Création d’un utilisateur (register)
@@ -52,16 +53,27 @@ export const createuser = async (req, res) => {
 // ---------------------------------------------------------
 export const login = async (req, res, next) => {
   try {
-    const { user, token } = req;
-    res.status(200).json({
-      message: "Connexion réussie",
-      token,
-      user: { id: user.id, username: user.username, email: user.email },
-    });
-  } catch (err) {
-    next(err);
+    const user = req.user;
+    const token = generateToken(user);
+
+    // ✅ Envoie TOUTES les données en une seule réponse
+    return res.status(200)
+      .cookie("auth_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      })
+      .json({
+        message: "Connexion réussie",
+        user: { id: user.id, username: user.username, email: user.email },
+        // token, // Optionnel : utile si le frontend a besoin du token en plus du cookie
+      });
+  } catch (error) {
+    next(error);
   }
 };
+
 
 // ---------------------------------------------------------
 // ✅ Déconnexion (logout)
