@@ -8,7 +8,7 @@ export const registerSchema = Joi.object({
     .email({ tlds: { allow: false } })
     .required(),
 
-  hashedPassword: passwordComplexity({
+  password: passwordComplexity({
     min: 8,
     max: 50,
     numeric: 1,

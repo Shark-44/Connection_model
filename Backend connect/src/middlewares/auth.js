@@ -13,12 +13,13 @@ const hashingOptions = {
 // Hasher le mot de passe avant création
 export const hashPassword = async (req, res, next) => {
   try {
+    
     const { password } = req.body;
     if (!password) throw { status: 400, message: "Mot de passe requis" };
 
     req.body.hashedPassword = await argon2.hash(password, hashingOptions);
     delete req.body.password;
-
+    
     next();
   } catch (err) {
     next(err);
