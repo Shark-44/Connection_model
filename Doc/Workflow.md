@@ -15,3 +15,4 @@ Un frontend sous react/typescript pour garder des habitude.
 8. Verification d'email existant ( + option username)
 9. Reinitialisation du mot de passe
 10. Double identification
+11. Joi la validité des données venant du front.
