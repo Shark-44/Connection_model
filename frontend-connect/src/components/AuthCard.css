@@ -61,3 +61,54 @@
     color: blue;
     cursor: pointer;
   }
+
+ /* Dans AuthCard.css */
+.password-rules {
+  margin-top: 5px;
+  font-size: 0.8rem;
+  color: #666;
+  text-align: left;
+}
+
+.password-rules p {
+  margin: 0;
+}
+
+.password-strength {
+  height: 5px;
+  background: #ddd;
+  margin-top: 5px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-bar {
+  height: 100%;
+  transition: width 0.3s, background 0.3s;
+}
+
+.strength-0 {
+  background: #ff4d4d;
+}
+
+.strength-1 {
+  background: #ff6b35;
+}
+
+.strength-2 {
+  background: #ffcc00;
+}
+
+.strength-3 {
+  background: #aaff80;
+}
+
+.strength-4 {
+  background: #00cc00;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #eeeeee;
+}
