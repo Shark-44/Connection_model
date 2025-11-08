@@ -14,3 +14,4 @@ Un frontend sous react/typescript pour garder des habitude.
 7. Mise en place d'un rate limiting. Apres 3 tentatives bloquage du compte et attente 15 min. C'est un scenario mais qui peut ouvrir a d'autres...
 8. Verification d'email existant ( + option username)
 9. Reinitialisation du mot de passe
+10. Double identification

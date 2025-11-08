@@ -1,31 +1,70 @@
 {
-    "api": {
-      "login": {
-        "user": {
-          "401": "Nom d’utilisateur ou mot de passe incorrect.",
-          "403": "compte bloqué",
-          "404": "Nom d’utilisateur ou mot de passe incorrect.",
-          "default_error": "Erreur de connexion."
-        }
-      },
-      "createuser": {
-        "user": {
-          "400": "Données invalides.",
-          "409": "Adresse mail déjà utilisé",
-          "default_error": "Erreur lors de la création de l’utilisateur."
-        }
-      },
-      "logout": {
-        "user": {
-          "default_error": "Erreur lors de la déconnexion."
-        }
-      },
-      "common": {
-        "network_error": "Impossible de se connecter au serveur.",
-        "not_found": "Ressource introuvable.",
-        "server_error": "Erreur interne du serveur.",
-        "default_error": "Une erreur est survenue."
+  "api": {
+    "login": {
+      "user": {
+        "400": "Identifiant et mot de passe requis.",
+        "401": "Mot de passe incorrect.",
+        "403": "Compte non vérifié ou trop de tentatives échouées.",
+        "404": "Utilisateur introuvable.",
+        "default_error": "Erreur de connexion."
       }
+    },
+    "createuser": {
+      "user": {
+        "400": "Champs requis manquants.",
+        "409": "Email déjà utilisé.",
+        "default_error": "Erreur lors de la création de l’utilisateur."
+      }
+    },
+    "verifyAccount": {
+      "user": {
+        "400": "Email et code requis.",
+        "426": "Utilisateur introuvable.",
+        "427": "Compte déjà vérifié.",
+        "428": "Code OTP invalide.",
+        "429": "Code OTP expiré.",
+        "200": "Compte vérifié avec succès.",
+        "default_error": "Erreur lors de la vérification du compte."
+      }
+    },
+    "resendOtp": {
+      "user": {
+        "400": "Email requis.",
+        "404": "Utilisateur introuvable.",
+        "400_already_verified": "Compte déjà vérifié.",
+        "429_cooldown": "Veuillez attendre avant de redemander un code.",
+        "429_limit": "Nombre maximum de tentatives atteint.",
+        "200": "Nouveau code OTP envoyé.",
+        "default_error": "Erreur lors de l'envoi du code OTP."
+      }
+    },
+    "forgotPassword": {
+      "user": {
+        "400": "Email requis.",
+        "200": "Si un compte existe, un mail a été envoyé.",
+        "default_error": "Erreur lors de la demande de réinitialisation."
+      }
+    },
+    "resetPassword": {
+      "user": {
+        "400": "Token et mot de passe requis.",
+        "404": "Utilisateur introuvable.",
+        "400_invalid": "Token invalide ou expiré.",
+        "200": "Mot de passe réinitialisé avec succès.",
+        "default_error": "Erreur lors de la réinitialisation du mot de passe."
+      }
+    },
+    "logout": {
+      "user": {
+        "200": "Déconnexion réussie.",
+        "default_error": "Erreur lors de la déconnexion."
+      }
+    },
+    "common": {
+      "network_error": "Impossible de se connecter au serveur.",
+      "not_found": "Ressource introuvable.",
+      "server_error": "Erreur interne du serveur.",
+      "default_error": "Une erreur est survenue."
     }
   }
-  
+}
