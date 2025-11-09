@@ -2,7 +2,9 @@ import { useState } from "react";
 import LoginCard from "../components/LoginCard";
 import RegisterCard from "../components/RegisterCard";
 import { login, logout } from "../api/userService";
+import CookieConsent from "../components/CookieConsent";
 import "./Home.css";
+
 interface LoginCredentials {
   identifier: string;
   password: string;
@@ -63,6 +65,7 @@ function Home() {
           </button>
         </>
       )}
+    <CookieConsent />
     </div>
   );
 }

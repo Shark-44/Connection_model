@@ -1,0 +1,19 @@
+.cookie-consent {
+    width: 80vw;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    position: absolute;
+    z-index: 10;
+    bottom: 10px;
+    padding: 10px;
+}
+.cookie-buttons {
+    padding: 8px 14px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
