@@ -9,6 +9,8 @@ import { User, Role, UserRole } from "./models/userRole.model.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/authRoutes.js";
 import authVerify from "./routes/authVerifyRoutes.js";
+import "./models/associations.js";
+
 
 //import { initEmail } from "./services/mailer.service.js";
 
