@@ -13,7 +13,7 @@ const UserConsent = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "users", // Référence à la table, pas au modèle
+        model: "users",
         key: "id",
       },
       onDelete: "CASCADE",
@@ -37,6 +37,11 @@ const UserConsent = sequelize.define(
   {
     tableName: "user_consents",
     timestamps: false,
+    hooks: {
+      beforeUpdate: (consent) => {
+        consent.updated_at = new Date();
+      },
+    },
   }
 );
 

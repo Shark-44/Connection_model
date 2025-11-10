@@ -12,6 +12,7 @@ const hashingOptions = {
 
 // Hasher le mot de passe avant création
 export const hashPassword = async (req, res, next) => {
+  console.log("auth :",req)
   try {
     
     const { password } = req.body;

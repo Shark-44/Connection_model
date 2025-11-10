@@ -52,3 +52,11 @@ Règle :
 
 Consentement explicite (bouton "Accepter" ou "Refuser").
 Possibilité de refuser sans bloquer l’accès au site (sauf si le cookie est technique).
+
+### Flow du consentement
+
+J'ai concentré l'enregistrement du consentement lors d'un login ou un createuser.
+Une nouvelle table a été créée, user_consent 
+Ainsi j'associe a un user, mais je verifie s'il a modifié son accord.
+
+Le prochain objectif est de modifier et le droit a l'oubli.

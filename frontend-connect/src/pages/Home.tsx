@@ -8,19 +8,19 @@ import "./Home.css";
 interface LoginCredentials {
   identifier: string;
   password: string;
+  cookieConsent?: boolean | null;
+  marketingConsent?: boolean | null;
 }
 function Home() {
   const [showLogin, setShowLogin] = useState(true);
-  const [user, setUser] = useState<{ username: string } | null>(null); // 👈 état pour l'utilisateur connecté
+  const [user, setUser] = useState<{ username: string } | null>(null);
 
-  const handleLogin = async ({ identifier, password }: LoginCredentials) => {
-    console.log("Tentative de connexion avec :", identifier, password);
-    const response = await login(identifier, password); // L'erreur remontera à LoginCard
-    console.log("✅ Connexion réussie :", response);
-    setUser(response.user);
-    localStorage.setItem("token", response.token);
-  };
   
+  const handleLogin = async ({ identifier, password, cookieConsent, marketingConsent }: LoginCredentials) => {
+    const response = await login(identifier, password, cookieConsent, marketingConsent);
+    
+    setUser(response.user);
+  };
 
   
 
@@ -28,7 +28,6 @@ function Home() {
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem("token"); // facultatif si tu stockes le token localement
       setUser(null);
       console.log("🚪 Déconnexion réussie");
     } catch (error) {

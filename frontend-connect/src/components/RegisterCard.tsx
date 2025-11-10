@@ -34,7 +34,14 @@ const RegisterCard = () => {
       return;
     }
     try {
-      await createUser(username.trim(), email, password);
+           // ✅ Récupération du consentement depuis localStorage
+           const cookieConsentLS = localStorage.getItem("cookieConsent");
+           const marketingConsentLS = localStorage.getItem("marketingConsent");
+     
+           const cookieConsent = cookieConsentLS !== null ? cookieConsentLS === "true" : null;
+           const marketingConsent = marketingConsentLS !== null ? marketingConsentLS === "true" : null;
+     
+      await createUser(username.trim(), email, password, cookieConsent, marketingConsent);
       setOpenPopup(true);
     } catch (err) {
       if (err instanceof APIError) {

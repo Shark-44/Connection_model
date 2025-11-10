@@ -11,8 +11,10 @@ export interface User {
 
 export interface LoginResponse {
   message: string;
-  token: string;
   user: User;
+  cookie_consent?: boolean | null;
+  marketing_consent?: boolean | null;
+  
 }
 
 export interface CreateReponse {
