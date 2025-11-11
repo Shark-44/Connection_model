@@ -1,5 +1,5 @@
 import { apiCall } from './apiWrapper';
-import { User, CreateReponse, LoginResponse } from "../types/types";
+import { User, CreateReponse, LoginResponse, RepUpconsent } from "../types/types";
 
 // ✅ Inscription avec consentements
 export const createUser = async (
@@ -52,14 +52,20 @@ export const logout = async (): Promise<User> => {
 
 // ✅ Mettre à jour le consentement (nouveau)
 export const updateConsent = async (
+  userId: number,
   cookieConsent: boolean,
   marketingConsent: boolean
-): Promise<{ success: boolean; consent: { cookie_consent: boolean; marketing_consent: boolean } }> => {
-  return apiCall<{ success: boolean; consent: { cookie_consent: boolean; marketing_consent: boolean } }>(
+): Promise<RepUpconsent> =>  {
+  const Data = {
+    userId,
+    cookieConsent,
+    marketingConsent,
+  };
+  return apiCall<RepUpconsent>(
     'post',
     '/consent/update-consent',
     {
-      data: { cookieConsent, marketingConsent },
+      data: Data,
       errorNamespace: 'api.updateConsent.user',
     }
   );
