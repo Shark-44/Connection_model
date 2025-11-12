@@ -3,15 +3,13 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { APIError } from '../api/apiWrapper';
 import { useNavigate } from "react-router-dom";
-
-
-
-
 import "./AuthCard.css";
 
 interface LoginCredentials {
   identifier: string;
   password: string;
+  cookieConsent?: boolean | null;
+  marketingConsent?: boolean | null;
 }
 
 interface LoginCardProps {
@@ -29,14 +27,19 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
     setError(null);
 
     try {
-      await onLogin({ identifier, password });
+      // ✅ Récupération du consentement depuis localStorage
+      const cookieConsentLS = localStorage.getItem("cookieConsent");
+      const marketingConsentLS = localStorage.getItem("marketingConsent");
+
+      const cookieConsent = cookieConsentLS !== null ? cookieConsentLS === "true" : null;
+      const marketingConsent = marketingConsentLS !== null ? marketingConsentLS === "true" : null;
+
+      // ✅ Appel à la fonction login passée depuis le parent
+      await onLogin({ identifier, password, cookieConsent, marketingConsent });
+
     } catch (err) {
-      
       if (err instanceof APIError) {
-        // Affiche le message d'erreur déjà traduit par apiCall
-        
-        setError(err.message);
-        
+        setError(err.message);        
       } else {
         setError("Une erreur inattendue est survenue.");
       }
@@ -68,7 +71,7 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
           />
         </div>
         <p className="forgot-link" onClick={() => navigate("/Forget")}>
-            Mot de passe oublié ?
+          Mot de passe oublié ?
         </p>
         {error && (
           <div key={error} className="error-message">
@@ -82,4 +85,3 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
 };
 
 export default LoginCard;
-

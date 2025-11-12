@@ -9,6 +9,9 @@ import { User, Role, UserRole } from "./models/userRole.model.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/authRoutes.js";
 import authVerify from "./routes/authVerifyRoutes.js";
+import consentRoutes from "./routes/consentRoutes.js";
+import "./models/associations.js";
+
 
 //import { initEmail } from "./services/mailer.service.js";
 
@@ -39,8 +42,8 @@ app.get("/", (req, res) => res.send("API en ligne "));
 // Routes
 app.use("/", userRoutes);
 app.use("/auth", authRoutes); 
-
 app.use("/auth-verify", authVerify);
+app.use("/consent", consentRoutes);
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {

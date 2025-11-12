@@ -1,6 +1,8 @@
 // Utilisateur
 
 export interface User {
+  marketingConsent: null;
+  cookieConsent: null;
   id: number;         
   username: string;    
   email: string;       
@@ -11,8 +13,10 @@ export interface User {
 
 export interface LoginResponse {
   message: string;
-  token: string;
   user: User;
+  cookie_consent?: boolean | null;
+  marketing_consent?: boolean | null;
+  
 }
 
 export interface CreateReponse {
@@ -23,4 +27,17 @@ export interface CreateReponse {
 export interface Reponse {
   email: string;
   opt: string;
+}
+
+export interface RepUpconsent {
+  userId: number;
+  cookieConsent: boolean;
+  marketingConsent: boolean;
+}
+
+export interface LoginCredentials {
+  identifier: string;
+  password: string;
+  cookieConsent?: boolean | null;
+  marketingConsent?: boolean | null;
 }

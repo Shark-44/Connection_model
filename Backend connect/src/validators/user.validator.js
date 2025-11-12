@@ -17,11 +17,16 @@ export const registerSchema = Joi.object({
     upperCase: 1,
   }).required(),
 
+  cookieConsent: Joi.boolean().optional().allow(null),
+  marketingConsent: Joi.boolean().optional().allow(null),
+
   roles: Joi.array().items(Joi.string()).optional(),
 });
 
 export const loginSchema = Joi.object({
   identifier: Joi.string().required(),
   password: Joi.string().required(),
+  cookieConsent: Joi.boolean().optional().allow(null),
+  marketingConsent: Joi.boolean().optional().allow(null),
 });
   
