@@ -75,27 +75,36 @@ export const login = async (req, res, next) => {
     }
 
     // Générer le JWT + jti
-    const { token, jti } = generateToken(user);
+    const { token: accessToken, jti: accessJti } = generateToken(user, "1h");
+    const { token: refreshToken, jti: refreshJti } = generateToken(user, "7d");
 
     // Stocker le jti en base
     await Token.create({
       userId: user.id,
-      jti,
+      jti: refreshJti,
+      hashToken: refreshToken,
       revoked: false,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1h = durée du token
+      expiresAt: new Date(Date.now() + 7*24*60*60*1000)
     });
 
     return res.status(200)
-      .cookie("auth_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      })
-      .json({
-        message: "Connexion réussie",
-        user: { id: user.id, username: user.username, email: user.email },
-      });
+    .cookie("auth_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000, // 1h
+    })
+    .cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7*24*60*60*1000, // 7 jours
+    })
+    .json({
+      message: "Connexion réussie",
+      user: { id: user.id, username: user.username, email: user.email },
+    });
+
   } catch (error) {
     next(error);
   }

@@ -1,9 +1,6 @@
-// src/api/apiWrapper.ts
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import i18n from '../i18n.ts';
 import api from './axiosInstance';
-
-
 
 export class APIError extends Error {
   constructor(
@@ -24,6 +21,7 @@ export async function apiCall<T>(
     params?: any;
     config?: AxiosRequestConfig;
     errorNamespace?: string;
+    retry?: boolean; // indique si on a déjà tenté un refresh
   }
 ) {
   try {
@@ -38,30 +36,52 @@ export async function apiCall<T>(
     let errorMessage: string;
     const namespace = options?.errorNamespace || 'api.common';
 
+    // Pas de réponse → problème réseau
     if (!axiosError.response) {
       errorMessage = i18n.t(`${namespace}.network_error`);
-    } else {
-      const status = axiosError.response.status;
-      const errorKey = `${namespace}.${status}`;
-      
+      console.error('API Network Error:', endpoint, axiosError);
+      throw new APIError(errorMessage);
+    }
+
+    const status = axiosError.response.status;
+
+    // --- Gestion automatique du refresh token ---
+    if (status === 401 && !options?.retry) {
       try {
-        errorMessage = i18n.t(errorKey);
-        
-      } catch (e) {
-        errorMessage = i18n.t(`${namespace}.default_error`);
+        console.log('401 détecté → tentative de refresh token');
+
+        // Appel du refresh token
+        await api.post('/refresh-token');
+
+        // Refaire la requête initiale avec retry=true pour éviter boucle infinie
+        return apiCall<T>(method, endpoint, { ...options, retry: true });
+      } catch (refreshError) {
+        console.error('Refresh token échoué', refreshError);
+        throw new APIError(
+          'Session expirée. Veuillez vous reconnecter.',
+          401,
+          'REFRESH_FAILED'
+        );
       }
+    }
+
+    // Traduction des erreurs normales
+    try {
+      errorMessage = i18n.t(`${namespace}.${status}`);
+    } catch {
+      errorMessage = i18n.t(`${namespace}.default_error`);
     }
 
     console.error('API Error:', {
       endpoint,
-      status: axiosError.response?.status,
+      status,
       message: errorMessage,
       originalError: axiosError,
     });
 
     throw new APIError(
       errorMessage,
-      axiosError.response?.status,
+      status,
       `${method.toUpperCase()}_${endpoint.toUpperCase()}_ERROR`
     );
   }

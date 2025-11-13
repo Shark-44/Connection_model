@@ -83,31 +83,74 @@ export const verifyPassword = async (req, res, next) => {
   }
 };
 
-// Vérification du token JWT dans les cookies
+// Vérification du token JWT dans les cookies + refresh automatique
 export const checkToken = async (req, res, next) => {
   try {
-    const token = req.cookies?.auth_token;
-    if (!token) throw { status: 401, message: "Token manquant" };
+    const accessToken = req.cookies?.auth_token;
+    if (!accessToken) throw { status: 401, message: "Token manquant" };
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-     // Vérification en base si le jti existe, n'est pas révoqué et n'est pas expiré
-     const tokenRecord = await Token.findOne({
-      where: {
-        jti: decoded.jti,
-        revoked: false,
-        expiresAt: { [Op.gt]: new Date() },
+    try {
+      // Vérification classique
+      const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+      const tokenRecord = await Token.findOne({
+        where: {
+          jti: decoded.jti,
+          revoked: false,
+          expiresAt: { [Op.gt]: new Date() },
         },
       });
 
-      if (!tokenRecord) {
-        throw { status: 401, message: "Token révoqué ou expiré" };
+      if (!tokenRecord) throw { status: 401, message: "Token révoqué ou expiré" };
+
+      req.user = decoded;
+      return next();
+
+    } catch (err) {
+      // Si token expiré → tenter refresh
+      if (err.name === "TokenExpiredError") {
+        const refreshToken = req.cookies?.refresh_token;
+        if (!refreshToken) throw { status: 401, message: "Refresh token manquant" };
+
+        const decodedRefresh = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        const refreshRecord = await Token.findOne({
+          where: {
+            jti: decodedRefresh.jti,
+            revoked: false,
+            expiresAt: { [Op.gt]: new Date() },
+          },
+        });
+
+        if (!refreshRecord) throw { status: 401, message: "Refresh token invalide ou expiré" };
+
+        const user = await User.findByPk(decodedRefresh.sub);
+        if (!user) throw { status: 404, message: "Utilisateur introuvable" };
+
+        // Générer un nouveau access token
+        const { token: newAccessToken, jti: newJti } = generateToken(user);
+
+        // Optionnel : renouveler le refresh token
+        const { token: newRefreshToken, jti: newRefreshJti } = generateToken(user, "7d");
+        await refreshRecord.update({ revoked: true });
+        await Token.create({
+          userId: user.id,
+          jti: newRefreshJti,
+          hashToken: newRefreshToken,
+          revoked: false,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+
+        // Envoyer les nouveaux cookies
+        res.cookie("auth_token", newAccessToken, { httpOnly: true, maxAge: 60 * 60 * 1000 });
+        res.cookie("refresh_token", newRefreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+        req.user = { id: user.id, username: user.username, email: user.email };
+        return next();
       }
 
-    req.user = decoded;
-
-    next();
+      // Si erreur autre → 401
+      throw { status: 401, message: "Token invalide" };
+    }
   } catch (err) {
-    next({ status: 401, message: "Token invalide ou expiré" });
+    next(err);
   }
 };
