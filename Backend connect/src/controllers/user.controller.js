@@ -1,10 +1,13 @@
 import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
-import UserConsent from "../models/userConsent.js";
 import generateOTP from "../utils/generateOTP.js";
+import Token from "../models/Token.js";
+import jwt from "jsonwebtoken";
+import UserConsent from "../models/userConsent.js";
 import { sendVerificationEmail } from "../services/mailer.service.js";
 import { generateToken } from "../middlewares/auth.js";
-import { setConsent } from "./consent.controller.js"; // <-- notre fonction réutilisable
+import { setConsent } from "./consent.controller.js"; 
+
 
 // ---------------------------------------------------------
 // ✅ Création d’un utilisateur (register)
@@ -71,7 +74,16 @@ export const login = async (req, res, next) => {
       await setConsent(user.id, cookieConsent ?? null, marketingConsent ?? null);
     }
 
-    const token = generateToken(user);
+    // Générer le JWT + jti
+    const { token, jti } = generateToken(user);
+
+    // Stocker le jti en base
+    await Token.create({
+      userId: user.id,
+      jti,
+      revoked: false,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1h = durée du token
+    });
 
     return res.status(200)
       .cookie("auth_token", token, {
@@ -92,8 +104,21 @@ export const login = async (req, res, next) => {
 // ---------------------------------------------------------
 // ✅ Déconnexion (logout)
 // ---------------------------------------------------------
-export const logout = (req, res, next) => {
+export const logout = async (req, res, next) => {
   try {
+    const token = req.cookies?.auth_token;
+    if (!token) return res.status(200).json({ message: "Déjà déconnecté" });
+
+    // Décoder le token pour récupérer le jti
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const jti = decoded.jti;
+
+    // Révoquer le token en base
+    await Token.update(
+      { revoked: true },
+      { where: { jti } }
+    );
+
     res
       .clearCookie("auth_token", { httpOnly: true, secure: true, sameSite: "strict" })
       .clearCookie("userId", { httpOnly: true, secure: true, sameSite: "strict" })

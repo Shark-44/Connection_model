@@ -1,5 +1,7 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
+import Token from "../models/Token.js";
 import User from "../models/user.model.js";
 import { Op } from "sequelize";
 
@@ -29,12 +31,14 @@ export const hashPassword = async (req, res, next) => {
 
 // Génération JWT
 export const generateToken = (user) => {
-  const payload = {
-    sub: user.id,
-    username: user.username,
-    email: user.email,
-  };
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+  const jti = randomUUID();
+  const payload = { sub: user.id, username: user.username, email: user.email };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    jwtid: jti,
+    expiresIn: "1h",
+    algorithm: "HS256",
+  });
+  return { token, jti };
 };
 
 // Vérification du mot de passe
@@ -80,12 +84,26 @@ export const verifyPassword = async (req, res, next) => {
 };
 
 // Vérification du token JWT dans les cookies
-export const checkToken = (req, res, next) => {
+export const checkToken = async (req, res, next) => {
   try {
     const token = req.cookies?.auth_token;
     if (!token) throw { status: 401, message: "Token manquant" };
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+     // Vérification en base si le jti existe, n'est pas révoqué et n'est pas expiré
+     const tokenRecord = await Token.findOne({
+      where: {
+        jti: decoded.jti,
+        revoked: false,
+        expiresAt: { [Op.gt]: new Date() },
+        },
+      });
+
+      if (!tokenRecord) {
+        throw { status: 401, message: "Token révoqué ou expiré" };
+      }
+
     req.user = decoded;
 
     next();
