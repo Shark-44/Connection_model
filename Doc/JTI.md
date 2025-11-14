@@ -11,3 +11,8 @@ Le JTI est principalement utilisé pour :
 3. Audit et traçabilité - Associer chaque token à un utilisateur et suivre son utilisation
 
 Ainsi c'est une etape supplementaire sur les cookies, le consentement RGPD.
+
+### Cas du refresh.
+
+Le cookie est limité a 1h ce qui est enregistré dans la table token. Mais dans une experience forum par exemple, l'utilisateur peut passer du temps. Donc integrer un refresh automatique. Le front capte une erreur 401 qui est token manquant et avec un booelen retry? permet d'appeler la fonction refresh token.
+Ainsi le back passe a une expiration de 7j et memorise dans la bdd. Le checktoken est alors toujours valide.

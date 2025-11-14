@@ -17,8 +17,8 @@ Token.init(
       unique: true,
     },
     hashToken: {
-      type: DataTypes.STRING,
-      allowNull: true,
+      type: DataTypes.STRING(512), 
+      allowNull: false,
     },
     revoked: {
       type: DataTypes.BOOLEAN,

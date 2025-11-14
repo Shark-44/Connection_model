@@ -68,25 +68,24 @@ export const login = async (req, res, next) => {
   try {
     const user = req.user;
     const { cookieConsent, marketingConsent } = req.body; 
-
+    
     // Mettre à jour le consentement si fourni
     if (cookieConsent !== undefined || marketingConsent !== undefined) {
       await setConsent(user.id, cookieConsent ?? null, marketingConsent ?? null);
     }
-
-    // Générer le JWT + jti
+    
+    // Générer UNIQUEMENT un access token court (1h)
     const { token: accessToken, jti: accessJti } = generateToken(user, "1h");
-    const { token: refreshToken, jti: refreshJti } = generateToken(user, "7d");
-
-    // Stocker le jti en base
+    
+    // Stocker le jti du token court en base
     await Token.create({
       userId: user.id,
-      jti: refreshJti,
-      hashToken: refreshToken,
+      jti: accessJti,
+      hashToken: accessToken,
       revoked: false,
-      expiresAt: new Date(Date.now() + 7*24*60*60*1000)
+      expiresAt: new Date(Date.now() + 1*60*1000) // 1h
     });
-
+    
     return res.status(200)
     .cookie("auth_token", accessToken, {
       httpOnly: true,
@@ -94,17 +93,10 @@ export const login = async (req, res, next) => {
       sameSite: "lax",
       maxAge: 60 * 60 * 1000, // 1h
     })
-    .cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7*24*60*60*1000, // 7 jours
-    })
     .json({
       message: "Connexion réussie",
       user: { id: user.id, username: user.username, email: user.email },
     });
-
   } catch (error) {
     next(error);
   }
@@ -115,25 +107,48 @@ export const login = async (req, res, next) => {
 // ---------------------------------------------------------
 export const logout = async (req, res, next) => {
   try {
-    const token = req.cookies?.auth_token;
-    if (!token) return res.status(200).json({ message: "Déjà déconnecté" });
-
-    // Décoder le token pour récupérer le jti
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const jti = decoded.jti;
-
-    // Révoquer le token en base
+    // On récupère le token actuel (peu importe s'il est court ou long)
+    const authToken = req.cookies?.auth_token;
+    
+    if (!authToken) {
+      return res.status(200).json({ message: "Déjà déconnecté" });
+    }
+    
+    // Décoder pour récupérer le JTI
+    const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+    
+    // Révoquer le token via son JTI
     await Token.update(
       { revoked: true },
-      { where: { jti } }
+      { where: { jti: decoded.jti, revoked: false } }
     );
-
+    
+    // Supprimer les cookies côté client
     res
-      .clearCookie("auth_token", { httpOnly: true, secure: true, sameSite: "strict" })
-      .clearCookie("userId", { httpOnly: true, secure: true, sameSite: "strict" })
+      .clearCookie("auth_token", { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "lax" 
+      })
+      .clearCookie("userId", { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "lax" 
+      })
       .status(200)
       .json({ message: "Déconnexion réussie" });
+      
   } catch (err) {
+    // Si le token est invalide/expiré, on nettoie quand même les cookies
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return res
+        .clearCookie("auth_token")
+        .clearCookie("userId")
+        .status(200)
+        .json({ message: "Déconnexion réussie" });
+    }
     next(err);
   }
 };
+
+

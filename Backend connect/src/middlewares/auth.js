@@ -87,6 +87,7 @@ export const verifyPassword = async (req, res, next) => {
 export const checkToken = async (req, res, next) => {
   try {
     const accessToken = req.cookies?.auth_token;
+ 
     if (!accessToken) throw { status: 401, message: "Token manquant" };
 
     try {

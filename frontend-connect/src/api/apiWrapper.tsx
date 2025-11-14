@@ -1,6 +1,8 @@
+// apiWrapper.ts
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import i18n from '../i18n.ts';
 import api from './axiosInstance';
+import { refreshToken } from './authService';
 
 export class APIError extends Error {
   constructor(
@@ -21,9 +23,9 @@ export async function apiCall<T>(
     params?: any;
     config?: AxiosRequestConfig;
     errorNamespace?: string;
-    retry?: boolean; // indique si on a déjà tenté un refresh
+    retry?: boolean;
   }
-) {
+): Promise<T> {
   try {
     const response = await api[method]<T>(
       endpoint,
@@ -45,15 +47,12 @@ export async function apiCall<T>(
 
     const status = axiosError.response.status;
 
-    // --- Gestion automatique du refresh token ---
+    // Gestion automatique du refresh token
     if (status === 401 && !options?.retry) {
       try {
         console.log('401 détecté → tentative de refresh token');
-
-        // Appel du refresh token
-        await api.post('/refresh-token');
-
-        // Refaire la requête initiale avec retry=true pour éviter boucle infinie
+        await refreshToken();
+        // Refaire la requête initiale avec retry=true
         return apiCall<T>(method, endpoint, { ...options, retry: true });
       } catch (refreshError) {
         console.error('Refresh token échoué', refreshError);

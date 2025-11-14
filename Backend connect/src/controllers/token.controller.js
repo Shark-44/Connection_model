@@ -5,37 +5,50 @@ import User from "../models/user.model.js";
 import { generateToken } from "../middlewares/auth.js";
 
 export const refreshToken = async (req, res, next) => {
+  console.log("refresh token")
+  console.log("controle des cookies",req.cookies)
+  console.log("controle du body",req.body)
   try {
-    const refreshToken = req.cookies?.refresh_token;
-    if (!refreshToken) throw { status: 401, message: "Refresh token manquant" };
+    const accessToken = req.cookies?.auth_token;
+    if (!accessToken) throw { status: 499, message: "probleme !" };
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    // Vérifier le token existant (même s’il est expiré, pour retrouver le jti)
+    let decoded;
+    try {
+      decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+    } catch (err) {
+      if (err.name !== "TokenExpiredError") throw { status: 401, message: "Token invalide" };
+      decoded = jwt.decode(accessToken); // récupère les infos même si expiré
+    }
+
+    // Chercher le token dans la table
     const tokenRecord = await Token.findOne({
-      where: { jti: decoded.jti, revoked: false, expiresAt: { [Op.gt]: new Date() } }
+      where: { jti: decoded.jti, revoked: false },
     });
-
-    if (!tokenRecord) throw { status: 401, message: "Refresh token invalide ou expiré" };
+    if (!tokenRecord) throw { status: 401, message: "Token introuvable ou révoqué" };
 
     const user = await User.findByPk(decoded.sub);
+    if (!user) throw { status: 404, message: "Utilisateur introuvable" };
 
-    // Générer un nouveau access token
-    const { token: newAccessToken, jti: newJti } = generateToken(user, "1h");
-
-    // Générer un nouveau refresh token et révoquer l'ancien
-    const { token: newRefreshToken, jti: newRefreshJti } = generateToken(user, "7d");
-    await tokenRecord.update({ revoked: true });
-    await Token.create({
-      userId: user.id,
-      jti: newRefreshJti,
-      hashToken: newRefreshToken,
-      revoked: false,
-      expiresAt: new Date(Date.now() + 7*24*60*60*1000)
+    // --- Générer un nouveau token valide 7 jours ---
+    const { token: newAccessToken, jti: newJti } = generateToken(user, "7d");
+   // console.log("tokenRecord avant update", tokenRecord.toJSON());
+    // --- Mettre à jour la table Token ---
+    await tokenRecord.update({
+      jti: newJti,
+      hashToken: newAccessToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    res.cookie("auth_token", newAccessToken, { httpOnly: true, maxAge: 60*60*1000 });
-    res.cookie("refresh_token", newRefreshToken, { httpOnly: true, maxAge: 7*24*60*60*1000 });
+    // --- Envoyer le nouveau cookie ---
+    res.cookie("auth_token", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+    });
 
-    res.json({ message: "Nouveau token généré" });
+    res.json({ message: "Token rafraîchi avec succès" });
   } catch (err) {
     next(err);
   }
