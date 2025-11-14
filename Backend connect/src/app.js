@@ -10,6 +10,7 @@ import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/authRoutes.js";
 import authVerify from "./routes/authVerifyRoutes.js";
 import consentRoutes from "./routes/consentRoutes.js";
+import { startTokenCleaner } from "./cron/tokenCleaner.js";
 import "./models/associations.js";
 
 
@@ -60,6 +61,10 @@ sequelize
   .sync({ alter: false })
   .then(() => console.log("✅ Base synchronisée avec succès"))
   .catch((err) => console.error("Erreur de connexion DB:", err));
+
+// Lancement du cron apres initialisation de la bdd
+  startTokenCleaner();
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Serveur en écoute sur le port ${PORT}`));
