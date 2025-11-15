@@ -84,15 +84,21 @@ export const verifyPassword = async (req, res, next) => {
 };
 
 // Vérification du token JWT dans les cookies + refresh automatique
+
 export const checkToken = async (req, res, next) => {
   try {
     const accessToken = req.cookies?.auth_token;
- 
+
     if (!accessToken) throw { status: 401, message: "Token manquant" };
 
+    // Récupérer IP et User-Agent du client
+    const currentIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const currentDevice = req.headers['user-agent'];
+
     try {
-      // Vérification classique
+      // Vérification du access token
       const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+
       const tokenRecord = await Token.findOne({
         where: {
           jti: decoded.jti,
@@ -103,6 +109,16 @@ export const checkToken = async (req, res, next) => {
 
       if (!tokenRecord) throw { status: 401, message: "Token révoqué ou expiré" };
 
+      // Indicateurs de suspicion
+      if (tokenRecord.ip && tokenRecord.ip !== currentIP) {
+        console.log(`[Suspicion] Token utilisé depuis IP différente: ${currentIP} (record: ${tokenRecord.ip})`);
+      }
+
+      if (tokenRecord.device && tokenRecord.device !== currentDevice) {
+        console.log(`[Suspicion] Token utilisé depuis un device différent: ${currentDevice} (record: ${tokenRecord.device})`);
+      }
+
+      // Tout est ok → passer à la suite
       req.user = decoded;
       return next();
 
@@ -113,6 +129,7 @@ export const checkToken = async (req, res, next) => {
         if (!refreshToken) throw { status: 401, message: "Refresh token manquant" };
 
         const decodedRefresh = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
         const refreshRecord = await Token.findOne({
           where: {
             jti: decodedRefresh.jti,
@@ -131,6 +148,8 @@ export const checkToken = async (req, res, next) => {
 
         // Optionnel : renouveler le refresh token
         const { token: newRefreshToken, jti: newRefreshJti } = generateToken(user, "7d");
+
+        // Révoquer l’ancien refresh token et stocker le nouveau
         await refreshRecord.update({ revoked: true });
         await Token.create({
           userId: user.id,
@@ -138,6 +157,8 @@ export const checkToken = async (req, res, next) => {
           hashToken: newRefreshToken,
           revoked: false,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          ip: currentIP,
+          device: currentDevice
         });
 
         // Envoyer les nouveaux cookies
@@ -148,7 +169,7 @@ export const checkToken = async (req, res, next) => {
         return next();
       }
 
-      // Si erreur autre → 401
+      // Si autre erreur → 401
       throw { status: 401, message: "Token invalide" };
     }
   } catch (err) {

@@ -33,6 +33,14 @@ Token.init(
       type: DataTypes.DATE,
       allowNull: false,
     },
+    ip: {                  
+      type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    device: {             
+      type: DataTypes.STRING(512),
+      allowNull: true,
+    },
   },
   {
     tableName: "tokens",

@@ -65,6 +65,7 @@ export const createuser = async (req, res, next) => {
 // ✅ Connexion (login)
 // ---------------------------------------------------------
 export const login = async (req, res, next) => {
+
   try {
     const user = req.user;
     const { cookieConsent, marketingConsent } = req.body; 
@@ -77,13 +78,20 @@ export const login = async (req, res, next) => {
     // Générer UNIQUEMENT un access token court (1h)
     const { token: accessToken, jti: accessJti } = generateToken(user, "1h");
     
+    // Indicateur de suspicion
+    const currentDevice = req.headers['user-agent'];
+   
+    const currentIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
     // Stocker le jti du token court en base
     await Token.create({
       userId: user.id,
       jti: accessJti,
       hashToken: accessToken,
       revoked: false,
-      expiresAt: new Date(Date.now() + 1*60*1000) // 1h
+      expiresAt: new Date(Date.now() + 1*60*1000), // 1h
+      ip: currentIP,
+      device: currentDevice,
     });
     
     return res.status(200)
