@@ -109,13 +109,18 @@ export const checkToken = async (req, res, next) => {
 
       if (!tokenRecord) throw { status: 401, message: "Token révoqué ou expiré" };
 
-      // Indicateurs de suspicion
-      if (tokenRecord.ip && tokenRecord.ip !== currentIP) {
-        console.log(`[Suspicion] Token utilisé depuis IP différente: ${currentIP} (record: ${tokenRecord.ip})`);
-      }
+      // ---- Indicateurs de suspicion ----
+      const ipChanged = tokenRecord.ip && tokenRecord.ip !== currentIP;
+      const deviceChanged = tokenRecord.device && tokenRecord.device !== currentDevice;
 
-      if (tokenRecord.device && tokenRecord.device !== currentDevice) {
-        console.log(`[Suspicion] Token utilisé depuis un device différent: ${currentDevice} (record: ${tokenRecord.device})`);
+      if (ipChanged && deviceChanged) {
+        // Les deux ont changé → révoquer le token
+        await tokenRecord.update({ revoked: true });
+        console.log(`[Sécurité] Token révoqué car device et IP différents : ${currentDevice} / ${currentIP}`);
+        throw { status: 401, message: "Token révoqué pour suspicion" };
+      } else if (ipChanged || deviceChanged) {
+        // Simple suspicion → log mais pas de révocation
+        console.log(`[Suspicion] Changement détecté mais token non révoqué : deviceChanged=${deviceChanged}, ipChanged=${ipChanged}`);
       }
 
       // Tout est ok → passer à la suite
