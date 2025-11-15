@@ -1,10 +1,13 @@
 import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
-import UserConsent from "../models/userConsent.js";
 import generateOTP from "../utils/generateOTP.js";
+import Token from "../models/Token.js";
+import jwt from "jsonwebtoken";
+import UserConsent from "../models/userConsent.js";
 import { sendVerificationEmail } from "../services/mailer.service.js";
 import { generateToken } from "../middlewares/auth.js";
-import { setConsent } from "./consent.controller.js"; // <-- notre fonction réutilisable
+import { setConsent } from "./consent.controller.js"; 
+
 
 // ---------------------------------------------------------
 // ✅ Création d’un utilisateur (register)
@@ -62,28 +65,46 @@ export const createuser = async (req, res, next) => {
 // ✅ Connexion (login)
 // ---------------------------------------------------------
 export const login = async (req, res, next) => {
+
   try {
     const user = req.user;
     const { cookieConsent, marketingConsent } = req.body; 
-
+    
     // Mettre à jour le consentement si fourni
     if (cookieConsent !== undefined || marketingConsent !== undefined) {
       await setConsent(user.id, cookieConsent ?? null, marketingConsent ?? null);
     }
+    
+    // Générer UNIQUEMENT un access token court (1h)
+    const { token: accessToken, jti: accessJti } = generateToken(user, "1h");
+    
+    // Indicateur de suspicion
+    const currentDevice = req.headers['user-agent'];
+   
+    const currentIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    const token = generateToken(user);
-
+    // Stocker le jti du token court en base
+    await Token.create({
+      userId: user.id,
+      jti: accessJti,
+      hashToken: accessToken,
+      revoked: false,
+      expiresAt: new Date(Date.now() + 1*60*1000), // 1h
+      ip: currentIP,
+      device: currentDevice,
+    });
+    
     return res.status(200)
-      .cookie("auth_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      })
-      .json({
-        message: "Connexion réussie",
-        user: { id: user.id, username: user.username, email: user.email },
-      });
+    .cookie("auth_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000, // 1h
+    })
+    .json({
+      message: "Connexion réussie",
+      user: { id: user.id, username: user.username, email: user.email },
+    });
   } catch (error) {
     next(error);
   }
@@ -92,14 +113,50 @@ export const login = async (req, res, next) => {
 // ---------------------------------------------------------
 // ✅ Déconnexion (logout)
 // ---------------------------------------------------------
-export const logout = (req, res, next) => {
+export const logout = async (req, res, next) => {
   try {
+    // On récupère le token actuel (peu importe s'il est court ou long)
+    const authToken = req.cookies?.auth_token;
+    
+    if (!authToken) {
+      return res.status(200).json({ message: "Déjà déconnecté" });
+    }
+    
+    // Décoder pour récupérer le JTI
+    const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+    
+    // Révoquer le token via son JTI
+    await Token.update(
+      { revoked: true },
+      { where: { jti: decoded.jti, revoked: false } }
+    );
+    
+    // Supprimer les cookies côté client
     res
-      .clearCookie("auth_token", { httpOnly: true, secure: true, sameSite: "strict" })
-      .clearCookie("userId", { httpOnly: true, secure: true, sameSite: "strict" })
+      .clearCookie("auth_token", { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "lax" 
+      })
+      .clearCookie("userId", { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "lax" 
+      })
       .status(200)
       .json({ message: "Déconnexion réussie" });
+      
   } catch (err) {
+    // Si le token est invalide/expiré, on nettoie quand même les cookies
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return res
+        .clearCookie("auth_token")
+        .clearCookie("userId")
+        .status(200)
+        .json({ message: "Déconnexion réussie" });
+    }
     next(err);
   }
 };
+
+

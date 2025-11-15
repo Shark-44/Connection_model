@@ -1,5 +1,7 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
+import Token from "../models/Token.js";
 import User from "../models/user.model.js";
 import { Op } from "sequelize";
 
@@ -29,12 +31,14 @@ export const hashPassword = async (req, res, next) => {
 
 // Génération JWT
 export const generateToken = (user) => {
-  const payload = {
-    sub: user.id,
-    username: user.username,
-    email: user.email,
-  };
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+  const jti = randomUUID();
+  const payload = { sub: user.id, username: user.username, email: user.email };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    jwtid: jti,
+    expiresIn: "1h",
+    algorithm: "HS256",
+  });
+  return { token, jti };
 };
 
 // Vérification du mot de passe
@@ -79,17 +83,101 @@ export const verifyPassword = async (req, res, next) => {
   }
 };
 
-// Vérification du token JWT dans les cookies
-export const checkToken = (req, res, next) => {
+// Vérification du token JWT dans les cookies + refresh automatique
+
+export const checkToken = async (req, res, next) => {
   try {
-    const token = req.cookies?.auth_token;
-    if (!token) throw { status: 401, message: "Token manquant" };
+    const accessToken = req.cookies?.auth_token;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    if (!accessToken) throw { status: 401, message: "Token manquant" };
 
-    next();
+    // Récupérer IP et User-Agent du client
+    const currentIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const currentDevice = req.headers['user-agent'];
+
+    try {
+      // Vérification du access token
+      const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+
+      const tokenRecord = await Token.findOne({
+        where: {
+          jti: decoded.jti,
+          revoked: false,
+          expiresAt: { [Op.gt]: new Date() },
+        },
+      });
+
+      if (!tokenRecord) throw { status: 401, message: "Token révoqué ou expiré" };
+
+      // ---- Indicateurs de suspicion ----
+      const ipChanged = tokenRecord.ip && tokenRecord.ip !== currentIP;
+      const deviceChanged = tokenRecord.device && tokenRecord.device !== currentDevice;
+
+      if (ipChanged && deviceChanged) {
+        // Les deux ont changé → révoquer le token
+        await tokenRecord.update({ revoked: true });
+        console.log(`[Sécurité] Token révoqué car device et IP différents : ${currentDevice} / ${currentIP}`);
+        throw { status: 401, message: "Token révoqué pour suspicion" };
+      } else if (ipChanged || deviceChanged) {
+        // Simple suspicion → log mais pas de révocation
+        console.log(`[Suspicion] Changement détecté mais token non révoqué : deviceChanged=${deviceChanged}, ipChanged=${ipChanged}`);
+      }
+
+      // Tout est ok → passer à la suite
+      req.user = decoded;
+      return next();
+
+    } catch (err) {
+      // Si token expiré → tenter refresh
+      if (err.name === "TokenExpiredError") {
+        const refreshToken = req.cookies?.refresh_token;
+        if (!refreshToken) throw { status: 401, message: "Refresh token manquant" };
+
+        const decodedRefresh = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+        const refreshRecord = await Token.findOne({
+          where: {
+            jti: decodedRefresh.jti,
+            revoked: false,
+            expiresAt: { [Op.gt]: new Date() },
+          },
+        });
+
+        if (!refreshRecord) throw { status: 401, message: "Refresh token invalide ou expiré" };
+
+        const user = await User.findByPk(decodedRefresh.sub);
+        if (!user) throw { status: 404, message: "Utilisateur introuvable" };
+
+        // Générer un nouveau access token
+        const { token: newAccessToken, jti: newJti } = generateToken(user);
+
+        // Optionnel : renouveler le refresh token
+        const { token: newRefreshToken, jti: newRefreshJti } = generateToken(user, "7d");
+
+        // Révoquer l’ancien refresh token et stocker le nouveau
+        await refreshRecord.update({ revoked: true });
+        await Token.create({
+          userId: user.id,
+          jti: newRefreshJti,
+          hashToken: newRefreshToken,
+          revoked: false,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          ip: currentIP,
+          device: currentDevice
+        });
+
+        // Envoyer les nouveaux cookies
+        res.cookie("auth_token", newAccessToken, { httpOnly: true, maxAge: 60 * 60 * 1000 });
+        res.cookie("refresh_token", newRefreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+        req.user = { id: user.id, username: user.username, email: user.email };
+        return next();
+      }
+
+      // Si autre erreur → 401
+      throw { status: 401, message: "Token invalide" };
+    }
   } catch (err) {
-    next({ status: 401, message: "Token invalide ou expiré" });
+    next(err);
   }
 };
