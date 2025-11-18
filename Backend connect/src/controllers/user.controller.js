@@ -7,7 +7,7 @@ import UserConsent from "../models/userConsent.js";
 import { sendVerificationEmail } from "../services/mailer.service.js";
 import { generateToken } from "../middlewares/auth.js";
 import { setConsent } from "./consent.controller.js"; 
-
+import logger from "../utils/logger.js";
 
 // ---------------------------------------------------------
 // ✅ Création d’un utilisateur (register)
@@ -15,7 +15,7 @@ import { setConsent } from "./consent.controller.js";
 export const createuser = async (req, res, next) => {
   try {
     const { username, email, hashedPassword, roles, cookieConsent, marketingConsent } = req.body;
-    console.log("user.controller ", username, email, hashedPassword )
+
     if (!username || !email || !hashedPassword) {
       throw { status: 400, message: "Champs requis manquants" };
     }
@@ -100,6 +100,11 @@ export const login = async (req, res, next) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 1000, // 1h
+    })
+    .cookie("userId", user.id, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: "lax" 
     })
     .json({
       message: "Connexion réussie",

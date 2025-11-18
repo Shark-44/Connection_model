@@ -12,9 +12,11 @@ import authVerify from "./routes/authVerifyRoutes.js";
 import consentRoutes from "./routes/consentRoutes.js";
 import { startTokenCleaner } from "./cron/tokenCleaner.js";
 import "./models/associations.js";
+import { v4 as uuidv4 } from 'uuid';
+import logger from './utils/logger.js';
 
 
-//import { initEmail } from "./services/mailer.service.js";
+
 
 dotenv.config();
 const app = express();
@@ -32,10 +34,23 @@ app.use(
     optionsSuccessStatus: 200,
   })
 );
+// Generer un traceID
+app.use((req, res, next) => {
+  global.currentTraceId = uuidv4(); // Génère un ID unique
+  next();
+});
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`${req.method} ${req.originalUrl} ${res.statusCode} [${duration}ms]`);
+  });
+  next();
+});
 
-app.use(morgan('dev'));
+
 app.use(helmet());
-//await initEmail();
+
 
 // Test route
 app.get("/", (req, res) => res.send("API en ligne "));
@@ -49,7 +64,7 @@ app.use("/consent", consentRoutes);
 // Gestion des erreurs
 app.use((err, req, res, next) => {
   console.error(" Erreur attrapée par le ErrorHandler :", err);
-
+  logger.error(`Erreur : ${err.message}`, { stack: err.stack });
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Erreur interne du serveur",
