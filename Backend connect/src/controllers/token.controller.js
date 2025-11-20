@@ -5,9 +5,9 @@ import User from "../models/user.model.js";
 import { generateToken } from "../middlewares/auth.js";
 
 export const refreshToken = async (req, res, next) => {
-  console.log("refresh token")
+  /*console.log("refresh token")
   console.log("controle des cookies",req.cookies)
-  console.log("controle du body",req.body)
+  console.log("controle du body",req.body) Pour des tests */
   try {
     const accessToken = req.cookies?.auth_token;
     if (!accessToken) throw { status: 499, message: "probleme !" };

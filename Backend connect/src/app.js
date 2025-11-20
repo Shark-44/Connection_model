@@ -63,8 +63,15 @@ app.use("/consent", consentRoutes);
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {
-  console.error(" Erreur attrapée par le ErrorHandler :", err);
-  logger.error(`Erreur : ${err.message}`, { stack: err.stack });
+  console.error("Erreur attrapée par le ErrorHandler :", err);
+
+  logger.error(`Erreur : ${err.message}`, {
+    status: err.status || 500,
+    stack: err.stack,
+    method: req.method,
+    url: req.originalUrl
+  });
+
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Erreur interne du serveur",

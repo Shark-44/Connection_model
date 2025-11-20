@@ -1,4 +1,5 @@
 import express from "express";
+import logger from "../utils/logger.js"; 
 import {
   updateConsent,
   requestRightToBeForgotten,
@@ -9,7 +10,10 @@ import { checkToken } from "../middlewares/auth.js";
 const router = express.Router();
 
 // Mettre à jour un consentement (nécessite d'être connecté)
-router.post("/update-consent", checkToken, updateConsent);
+router.post("/update-consent", checkToken, (req, res, next) => {
+  logger.info("Mise a jour des consentements", { userId: req.user?.sub });
+  next();
+},  updateConsent);
 
 // Demander le droit à l'oubli (nécessite d'être connecté)
 router.post("/right-to-be-forgotten", requestRightToBeForgotten);

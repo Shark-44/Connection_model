@@ -32,7 +32,7 @@ export const hashPassword = async (req, res, next) => {
 // Génération JWT
 export const generateToken = (user) => {
   const jti = randomUUID();
-  const payload = { sub: user.id, username: user.username, email: user.email };
+  const payload = { sub: user.id, username: user.username };
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     jwtid: jti,
     expiresIn: "1h",
@@ -132,6 +132,7 @@ export const checkToken = async (req, res, next) => {
 
       // ✅ Tout est ok → passer à la suite
       req.user = decoded;
+    
       return next();
 
     } catch (err) {

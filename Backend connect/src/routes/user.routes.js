@@ -1,7 +1,7 @@
 // src/routes/userRoutes.js
 import express from "express";
 import { createuser, login, logout } from "../controllers/user.controller.js";
-import { hashPassword, verifyPassword } from "../middlewares/auth.js";
+import { hashPassword, verifyPassword, checkToken } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { registerSchema, loginSchema } from "../validators/user.validator.js";
 import { refreshToken } from "../controllers/token.controller.js";
@@ -17,12 +17,19 @@ router.post("/login",validate(loginSchema), verifyPassword, (req, res, next) => 
     next();
   }, login);
 
-router.post("/logout", (req, res, next) => {
-    logger.info("Demande de logout", { userId: req.user?.id });
+router.post("/logout", checkToken, (req, res, next) => {
+    logger.info("Demande de logout", { userId:req.user?.sub});
     next();
   }, logout);
 
-router.post("/refresh-token", refreshToken);
+router.post("/refresh-token", (req, res, next) => {
+  logger.info("Tentative de refresh token", { 
+    traceId: req.traceId,
+    ip: req.ip,
+    userAgent: req.headers['user-agent']
+  });
+    next();
+  }, refreshToken);
 
 
 export default router;
