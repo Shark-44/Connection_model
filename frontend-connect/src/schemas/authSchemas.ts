@@ -34,9 +34,15 @@ export const registerSchema = z.object({
 /**
  * Schéma de validation pour la connexion
  */
+
+
 export const loginSchema = z.object({
-  email: z.string().email("Veuillez entrer une adresse email valide"),
-  password: z.string().min(1, "Le mot de passe est requis"),
+  identifier: z
+    .string()
+    .min(1, "L'identifiant est requis."),
+  password: z
+    .string()
+    .min(1, "Le mot de passe est requis."),
 });
 
 /**
