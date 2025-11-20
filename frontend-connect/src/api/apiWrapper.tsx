@@ -58,9 +58,9 @@ export async function apiCall<T>(
     const status = axiosError.response.status;
 
     // 🐛 Debug logs
-    console.log('🔍 Status reçu:', status, 'Type:', typeof status);
+    /*console.log('🔍 Status reçu:', status, 'Type:', typeof status);
     console.log('🔍 Retry flag:', options?.retry);
-    console.log('🔍 Response data:', axiosError.response.data);
+    console.log('🔍 Response data:', axiosError.response.data);*/
 
     // 🎯 Gestion automatique du refresh token (498 uniquement)
     if (status === 498 && !options?.retry) {

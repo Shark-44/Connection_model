@@ -16,7 +16,7 @@ export const createUser = async (
     cookieConsent,
     marketingConsent,
   };
-  console.log("Payload create envoyé :", userData);
+
   return apiCall<CreateReponse>('post', '/admin-user', {
     data: userData,
     errorNamespace: 'api.createuser.user',

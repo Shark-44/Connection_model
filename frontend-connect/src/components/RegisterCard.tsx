@@ -1,65 +1,121 @@
 import { useState, type FormEvent } from "react";
-import { createUser } from "../api/userService";
-import { APIError } from '../api/apiWrapper';
+import { useRegister } from "../hooks/useRegister";
+import { useFormValidation } from "../hooks/useFormValidation";
+import { registerSchema } from "../schemas/authSchemas";
 import zxcvbn from "zxcvbn";
 import "./AuthCard.css";
 
 const RegisterCard = () => {
+  // États du formulaire
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-  const [openPopup, setOpenPopup] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [passwordTouched, setPasswordTouched] = useState<boolean>(false);
 
+  // Hooks personnalisés
+  const { isLoading, error, isSuccess, register, resetState } = useRegister();
+  const { fieldErrors, validateField, clearFieldError } = useFormValidation(registerSchema);
+
+  /**
+   * Gestion du changement du nom d'utilisateur
+   */
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.trimStart();
+    if (!/[<>]/.test(value)) {
+      setUsername(value);
+      clearFieldError("username");
+    }
+  };
+
+  /**
+   * Validation du nom d'utilisateur au blur
+   */
+  const handleUsernameBlur = () => {
+    if (username) {
+      validateField("username", username);
+    }
+  };
+
+  /**
+   * Gestion du changement de l'email
+   */
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (!/[<>]/.test(value)) {
+      setEmail(value);
+      clearFieldError("email");
+    }
+  };
+
+  /**
+   * Validation de l'email au blur
+   */
+  const handleEmailBlur = () => {
+    if (email) {
+      validateField("email", email);
+    }
+  };
+
+  /**
+   * Gestion du changement du mot de passe
+   */
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (!/[<>]/.test(value)) {
       setPassword(value);
+      clearFieldError("password");
+      
       if (!passwordTouched && value.length > 0) {
         setPasswordTouched(true);
       }
+      
+      // Calcul de la force du mot de passe
       const result = zxcvbn(value);
       setPasswordStrength(result.score);
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!username.trim() || !email || !password) {
-      setError("Veuillez remplir tous les champs.");
-      return;
-    }
-    try {
-           // ✅ Récupération du consentement depuis localStorage
-           const cookieConsentLS = localStorage.getItem("cookieConsent");
-           const marketingConsentLS = localStorage.getItem("marketingConsent");
-     
-           const cookieConsent = cookieConsentLS !== null ? cookieConsentLS === "true" : null;
-           const marketingConsent = marketingConsentLS !== null ? marketingConsentLS === "true" : null;
-     
-      await createUser(username.trim(), email, password, cookieConsent, marketingConsent);
-      setOpenPopup(true);
-    } catch (err) {
-      if (err instanceof APIError) {
-        setError(err.message);
-      } else {
-        setError("Une erreur inattendue est survenue.");
-      }
+  /**
+   * Validation du mot de passe au blur
+   */
+  const handlePasswordBlur = () => {
+    if (password) {
+      validateField("password", password);
     }
   };
 
+  /**
+   * Soumission du formulaire
+   */
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    await register({
+      username,
+      email,
+      password,
+    });
+  };
+
+  /**
+   * Fermeture de la popup de succès
+   */
   const closePopUp = () => {
-    setOpenPopup(false);
+    resetState();
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setPasswordStrength(0);
+    setPasswordTouched(false);
   };
 
   return (
     <div className="auth-card">
       <h2>Inscription</h2>
       <form onSubmit={handleSubmit}>
+        {/* Nom d'utilisateur */}
         <div className="input-group">
           <label htmlFor="username">Nom d'utilisateur</label>
           <input
@@ -67,13 +123,17 @@ const RegisterCard = () => {
             type="text"
             placeholder="Nom d'utilisateur"
             value={username}
-            onChange={(e) => {
-              const value = e.target.value.trimStart();
-              if (!/[<>]/.test(value)) setUsername(value);
-            }}
+            onChange={handleUsernameChange}
+            onBlur={handleUsernameBlur}
+            disabled={isLoading}
             required
           />
+          {fieldErrors.username && (
+            <div className="field-error">{fieldErrors.username}</div>
+          )}
         </div>
+
+        {/* Email */}
         <div className="input-group">
           <label htmlFor="email">Email</label>
           <input
@@ -81,14 +141,17 @@ const RegisterCard = () => {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => {
-              if (!e.target.value.includes(">") && !e.target.value.includes("<")) {
-                setEmail(e.target.value);
-              }
-            }}
+            onChange={handleEmailChange}
+            onBlur={handleEmailBlur}
+            disabled={isLoading}
             required
           />
+          {fieldErrors.email && (
+            <div className="field-error">{fieldErrors.email}</div>
+          )}
         </div>
+
+        {/* Mot de passe */}
         <div className="input-group">
           <label htmlFor="password">Mot de passe</label>
           <div className="password-wrapper">
@@ -98,20 +161,28 @@ const RegisterCard = () => {
               placeholder="Mot de passe"
               value={password}
               onChange={handlePasswordChange}
+              onBlur={handlePasswordBlur}
               onFocus={() => setPasswordTouched(true)}
+              disabled={isLoading}
               required
             />
             <button
               type="button"
               className="toggle-password"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? "🙈" : "👁️"}
             </button>
           </div>
+          
+          {/* Règles du mot de passe ou barre de force */}
           {!passwordTouched ? (
             <div className="password-rules">
-              <p>Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un caractère spécial.</p>
+              <p>
+                Le mot de passe doit contenir au moins 8 caractères, une
+                majuscule, une minuscule et un caractère spécial.
+              </p>
             </div>
           ) : (
             <div className="password-strength">
@@ -121,22 +192,37 @@ const RegisterCard = () => {
               ></div>
             </div>
           )}
+          
+          {fieldErrors.password && (
+            <div className="field-error">{fieldErrors.password}</div>
+          )}
         </div>
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+
+        {/* Message d'erreur global */}
+        {error && <div className="error-message">{error}</div>}
+
+        {/* Bouton de soumission */}
         <button
           type="submit"
-          disabled={!username.trim() || !email || !password || passwordStrength > 7}
+          disabled={
+            isLoading ||
+            !username.trim() ||
+            !email ||
+            !password ||
+            passwordStrength > 7
+          }
         >
-          S'inscrire
+          {isLoading ? "Inscription en cours..." : "S'inscrire"}
         </button>
       </form>
-      {openPopup && (
+
+      {/* Popup de succès */}
+      {isSuccess && (
         <div className="popup">
-          <p>Inscription réussie ! Vérifiez votre email pour confirmer votre compte.</p>
+          <p>
+            Inscription réussie ! Vérifiez votre email pour confirmer votre
+            compte.
+          </p>
           <button onClick={closePopUp}>Fermer</button>
         </div>
       )}

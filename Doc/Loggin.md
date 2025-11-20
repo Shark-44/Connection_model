@@ -20,3 +20,13 @@ Analyse : Comprendre l’usage de l’API et optimiser les performances.
 Le bon fonctionnement de mon API par les endpoints dans les routers
 La journalisation des erreurs dans mon gestionnaire ErrorHandler.
 Les metadonnées qui sont aussi une tracabilité d'un user, d'une ip etc ...
+
+Mais attention le RGPD! Il ne faut pas logger :
+
+Les mots de passe
+Les tokens JWT
+Les données de santé, données sensibles
+Les emails et identifiants complets si ce n’est pas nécessaire
+
+3. Comment journaliser ?
+
