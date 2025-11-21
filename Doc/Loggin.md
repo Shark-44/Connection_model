@@ -30,3 +30,33 @@ Les emails et identifiants complets si ce n’est pas nécessaire
 
 3. Comment journaliser ?
 
+
+
+### La purge
+
+new DailyRotateFile({
+  filename: path.join(logDir, "error-%DATE%.log"),
+  datePattern: "YYYY-MM-DD",
+  level: "error",
+  zippedArchive: true,
+  maxSize: "20m",
+  maxFiles: "14d",
+})
+```
+- **Fichiers quotidiens** : `error-2025-11-20.log`, `error-2025-11-21.log`, etc.
+- **Taille contrôlée** : max 20 Mo par fichier
+- **Nettoyage auto** : supprime après 14 jours
+
+## 📁 Structure de tes fichiers logs
+
+Après quelques jours, tu auras :
+```
+logs/
+├── error-2025-11-14.log.gz       (compressé, ancien)
+├── error-2025-11-15.log.gz
+├── error-2025-11-19.log.gz
+├── error-2025-11-20.log          (aujourd'hui, actif)
+├── combined-2025-11-14.log.gz
+├── combined-2025-11-15.log.gz
+├── combined-2025-11-19.log.gz
+└── combined-2025-11-20.log       (aujourd'hui, actif)
