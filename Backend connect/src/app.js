@@ -3,9 +3,10 @@ import cookieParser from 'cookie-parser';
 import dotenv from "dotenv";
 import cors from 'cors';
 import sequelize from "./config/database.js";
-import morgan from 'morgan';
 import helmet from 'helmet';
-import { User, Role, UserRole } from "./models/userRole.model.js";
+import { v4 as uuidv4 } from 'uuid';
+import logger, { asyncLocalStorage } from './utils/logger.js';
+
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/authRoutes.js";
 import authVerify from "./routes/authVerifyRoutes.js";
@@ -13,42 +14,85 @@ import consentRoutes from "./routes/consentRoutes.js";
 import { startTokenCleaner } from "./cron/tokenCleaner.js";
 import "./models/associations.js";
 
-
-//import { initEmail } from "./services/mailer.service.js";
-
 dotenv.config();
 const app = express();
 
+// === Middleware de sécurité et parsing ===
 app.use(cookieParser());
-
 app.use(express.json());
-
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200,
-  })
-);
-
-app.use(morgan('dev'));
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+}));
 app.use(helmet());
-//await initEmail();
 
-// Test route
-app.get("/", (req, res) => res.send("API en ligne "));
+// === Middleware TraceId par requête (stable avec AsyncLocalStorage) ===
+app.use((req, res, next) => {
+  const traceId = uuidv4();
+  const store = new Map();
+  store.set("traceId", traceId);
 
-// Routes
+  asyncLocalStorage.run(store, () => {
+    next();
+  });
+});
+
+// === Middleware de log des requêtes ===
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const store = asyncLocalStorage.getStore();
+    const traceId = store?.get("traceId") || "no-trace";
+    const userId = req.user?.sub || "anonymous";
+
+    const logData = {
+      traceId,
+      userId,
+      ip: req.ip,
+      method: req.method,
+      url: req.originalUrl,
+      status: res.statusCode,
+      duration
+    };
+
+    const level = res.statusCode >= 500 ? 'error' :
+      res.statusCode >= 400 ? 'warn' : 'info';
+
+    logger.log(level, `${req.method} ${req.originalUrl} ${res.statusCode} [${duration}ms]`, logData);
+  });
+  next();
+});
+
+// === Test route ===
+app.get("/", (req, res) => res.send("API en ligne"));
+
+// === Routes ===
 app.use("/", userRoutes);
-app.use("/auth", authRoutes); 
+app.use("/auth", authRoutes);
 app.use("/auth-verify", authVerify);
 app.use("/consent", consentRoutes);
 
-// Gestion des erreurs
+// === Middleware ErrorHandler centralisé ===
 app.use((err, req, res, next) => {
-  console.error(" Erreur attrapée par le ErrorHandler :", err);
+  const store = asyncLocalStorage.getStore();
+  const traceId = store?.get("traceId") || "no-trace";
+  const userId = req.user?.sub || "anonymous";
+
+  const level = err.status && err.status < 500 ? 'warn' : 'error';
+
+  logger.log(level, `Erreur : ${err.message}`, {
+    traceId,
+    userId,
+    ip: req.ip,
+    method: req.method,
+    url: req.originalUrl,
+    status: err.status || 500,
+    stack: err.stack,
+  });
 
   res.status(err.status || 500).json({
     success: false,
@@ -56,15 +100,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Synchronisation base
+// === Synchronisation DB ===
 sequelize
   .sync({ alter: false })
   .then(() => console.log("✅ Base synchronisée avec succès"))
   .catch((err) => console.error("Erreur de connexion DB:", err));
 
-// Lancement du cron apres initialisation de la bdd
-  startTokenCleaner();
+// === Lancement du cron ===
+startTokenCleaner();
 
-
+// === Démarrage du serveur ===
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Serveur en écoute sur le port ${PORT}`));

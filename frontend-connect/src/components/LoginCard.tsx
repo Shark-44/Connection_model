@@ -1,8 +1,7 @@
-// src/components/LoginCards.tsx
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { APIError } from '../api/apiWrapper';
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { useFormValidation } from "../hooks/useFormValidation";
+import { loginSchema } from "../schemas/authSchemas";
 import "./AuthCard.css";
 
 interface LoginCredentials {
@@ -20,29 +19,44 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { fieldErrors, validateField, clearFieldError } =
+    useFormValidation(loginSchema);
+
+  const handleIdentifierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIdentifier(e.target.value);
+    clearFieldError("identifier");
+  };
+
+  const handleIdentifierBlur = () => {
+    validateField("identifier", identifier);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    clearFieldError("password");
+  };
+
+  const handlePasswordBlur = () => {
+    validateField("password", password);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    const cookieConsent = localStorage.getItem("cookieConsent") === "true";
+    const marketingConsent = localStorage.getItem("marketingConsent") === "true";
+
     try {
-      // ✅ Récupération du consentement depuis localStorage
-      const cookieConsentLS = localStorage.getItem("cookieConsent");
-      const marketingConsentLS = localStorage.getItem("marketingConsent");
-
-      const cookieConsent = cookieConsentLS !== null ? cookieConsentLS === "true" : null;
-      const marketingConsent = marketingConsentLS !== null ? marketingConsentLS === "true" : null;
-
-      // ✅ Appel à la fonction login passée depuis le parent
+      setIsLoading(true);
       await onLogin({ identifier, password, cookieConsent, marketingConsent });
-
-    } catch (err) {
-      if (err instanceof APIError) {
-        setError(err.message);        
-      } else {
-        setError("Une erreur inattendue est survenue.");
-      }
+    } catch (err: any) {
+      setError(err.message || "Une erreur inattendue est survenue.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,31 +68,41 @@ const LoginCard = ({ onLogin }: LoginCardProps) => {
           <label>Nom d’utilisateur ou e-mail</label>
           <input
             type="text"
-            placeholder="Nom d’utilisateur ou e-mail"
             value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
+            onChange={handleIdentifierChange}
+            onBlur={handleIdentifierBlur}
+            disabled={isLoading}
             required
           />
+          {fieldErrors.identifier && (
+            <div className="field-error">{fieldErrors.identifier}</div>
+          )}
         </div>
+
         <div className="input-group">
           <label>Mot de passe</label>
           <input
             type="password"
-            placeholder="Mot de passe"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
+            onBlur={handlePasswordBlur}
+            disabled={isLoading}
             required
           />
+          {fieldErrors.password && (
+            <div className="field-error">{fieldErrors.password}</div>
+          )}
         </div>
+
         <p className="forgot-link" onClick={() => navigate("/Forget")}>
           Mot de passe oublié ?
         </p>
-        {error && (
-          <div key={error} className="error-message">
-            {error}
-          </div>
-        )}
-        <button type="submit">Se connecter</button>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Connexion..." : "Se connecter"}
+        </button>
       </form>
     </div>
   );

@@ -26,7 +26,9 @@
     "mysql2": "^3.15.3",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

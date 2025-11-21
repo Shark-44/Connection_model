@@ -3,7 +3,7 @@ import Token from "../models/Token.js";
 import { Op } from "sequelize";
 
 export const startTokenCleaner = () => {
-  cron.schedule("*/30 * * * *", async () => {
+  cron.schedule("* * 1 * *", async () => {
     try {
       const deleted = await Token.destroy({
         where: {
