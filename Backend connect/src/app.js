@@ -5,7 +5,7 @@ import cors from 'cors';
 import sequelize from "./config/database.js";
 import helmet from 'helmet';
 import { v4 as uuidv4 } from 'uuid';
-import logger from './utils/logger.js';
+import logger, { asyncLocalStorage } from './utils/logger.js';
 
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -29,10 +29,15 @@ app.use(cors({
 }));
 app.use(helmet());
 
-// === Middleware TraceId par requête (stable avec global) ===
+// === Middleware TraceId par requête (stable avec AsyncLocalStorage) ===
 app.use((req, res, next) => {
-  global.currentTraceId = uuidv4();
-  next();
+  const traceId = uuidv4();
+  const store = new Map();
+  store.set("traceId", traceId);
+
+  asyncLocalStorage.run(store, () => {
+    next();
+  });
 });
 
 // === Middleware de log des requêtes ===
@@ -40,7 +45,8 @@ app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
-    const traceId = global.currentTraceId || "no-trace";
+    const store = asyncLocalStorage.getStore();
+    const traceId = store?.get("traceId") || "no-trace";
     const userId = req.user?.sub || "anonymous";
 
     const logData = {
@@ -54,7 +60,7 @@ app.use((req, res, next) => {
     };
 
     const level = res.statusCode >= 500 ? 'error' :
-                  res.statusCode >= 400 ? 'warn' : 'info';
+      res.statusCode >= 400 ? 'warn' : 'info';
 
     logger.log(level, `${req.method} ${req.originalUrl} ${res.statusCode} [${duration}ms]`, logData);
   });
@@ -66,13 +72,14 @@ app.get("/", (req, res) => res.send("API en ligne"));
 
 // === Routes ===
 app.use("/", userRoutes);
-app.use("/auth", authRoutes); 
+app.use("/auth", authRoutes);
 app.use("/auth-verify", authVerify);
 app.use("/consent", consentRoutes);
 
 // === Middleware ErrorHandler centralisé ===
 app.use((err, req, res, next) => {
-  const traceId = global.currentTraceId || "no-trace";
+  const store = asyncLocalStorage.getStore();
+  const traceId = store?.get("traceId") || "no-trace";
   const userId = req.user?.sub || "anonymous";
 
   const level = err.status && err.status < 500 ? 'warn' : 'error';
